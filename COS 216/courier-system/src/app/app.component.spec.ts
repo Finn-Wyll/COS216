@@ -14,16 +14,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'courier-web-client' title`, () => {
+  it(`should have the 'courier-system' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('courier-web-client');
+    expect(app.title).toEqual('courier-system');
   });
 
   it('should render title', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, courier-web-client');
+    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, courier-system');
   });
 });

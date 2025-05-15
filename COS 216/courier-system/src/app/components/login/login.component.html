@@ -1,0 +1,73 @@
+<!-- src/app/components/login/login.component.html -->
+
+<div class="login-container">
+  <div class="login-card">
+    <h2>Courier System</h2>
+    
+    <!-- Server Connection Form -->
+    <div *ngIf="!isConnected" class="server-form">
+      <h3>Connect to Server</h3>
+      <form [formGroup]="serverForm" (ngSubmit)="connectToServer()">
+        <div class="form-group">
+          <label for="serverUrl">Server URL:</label>
+          <input 
+            type="text" 
+            id="serverUrl" 
+            formControlName="serverUrl" 
+            placeholder="http://localhost:3000">
+        </div>
+        <button 
+          type="submit" 
+          [disabled]="!serverForm.valid" 
+          class="btn btn-primary">
+          Connect
+        </button>
+      </form>
+    </div>
+    
+    <!-- Login Form -->
+    <div *ngIf="isConnected && !isLoggedIn" class="login-form">
+      <h3>Login</h3>
+      <form [formGroup]="loginForm" (ngSubmit)="login()">
+        <div class="form-group">
+          <label for="username">Username:</label>
+          <input 
+            type="text" 
+            id="username" 
+            formControlName="username" 
+            placeholder="Enter username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input 
+            type="password" 
+            id="password" 
+            formControlName="password" 
+            placeholder="Enter password">
+        </div>
+        <button 
+          type="submit" 
+          [disabled]="!loginForm.valid" 
+          class="btn btn-primary">
+          Login
+        </button>
+      </form>
+    </div>
+    
+    <!-- Connection Status -->
+    <div class="status-message">
+      <p *ngIf="isConnected" class="success-message">
+        Connected to server
+      </p>
+      <p *ngIf="!isConnected" class="info-message">
+        Not connected to server
+      </p>
+    </div>
+    
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="error-message">
+      <p>{{ errorMessage }}</p>
+      <button (click)="clearError()" class="btn btn-small">Dismiss</button>
+    </div>
+  </div>
+</div>
