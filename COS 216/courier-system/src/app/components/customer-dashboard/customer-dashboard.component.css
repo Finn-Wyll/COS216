@@ -1,0 +1,107 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.user-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #d32f2f;
+}
+
+.map-section {
+  margin-bottom: 20px;
+}
+
+.orders-section {
+  margin-bottom: 20px;
+}
+
+.orders-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.order-card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.order-header {
+  padding: 10px;
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-header h4 {
+  margin: 0;
+}
+
+.order-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.order-status.storage {
+  background-color: #ffeb3b;
+  color: #333;
+}
+
+.order-status.out_for_delivery {
+  background-color: #2196f3;
+  color: white;
+}
+
+.order-status.delivered {
+  background-color: #4caf50;
+  color: white;
+}
+
+.order-body {
+  padding: 10px;
+}
+
+.request-btn {
+  padding: 6px 12px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.request-btn:hover {
+  background-color: #1976d2;
+}
+
+.no-orders {
+  grid-column: 1 / -1;
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}

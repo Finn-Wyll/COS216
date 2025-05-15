@@ -163,8 +163,6 @@ else if($data["type"] == "Login"){
     if ($row = $result->fetch_assoc()) {
 
         if (password_verify($password, $row["password"])) {
-            $name= $row["name"];
-            $surname= $row["surname"];
 
             http_response_code(200);
             echo json_encode([
