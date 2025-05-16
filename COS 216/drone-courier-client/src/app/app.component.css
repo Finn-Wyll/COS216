@@ -1,0 +1,6 @@
+/* src/app/app.component.css */
+
+:host {
+  display: block;
+  height: 100%;
+}

@@ -1,0 +1,82 @@
+<!-- src/app/components/order-view/order-view.component.html -->
+
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Drone Courier System</h1>
+    <div class="user-info">
+      <span>Welcome, {{ userName }} ({{ userType }})</span>
+      <button class="logout-button" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+    <nav class="dashboard-nav">
+      <ul>
+        <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+        <li><a routerLink="/orders" routerLinkActive="active">View Orders</a></li>
+      </ul>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="orders-section">
+        <h2>My Orders</h2>
+        
+        <div *ngIf="error" class="error-message">
+          {{ error }}
+        </div>
+
+        <div *ngIf="loading" class="loading-message">
+          Loading orders...
+        </div>
+
+        <div *ngIf="!loading && orders.length === 0" class="empty-orders">
+          You have no orders yet.
+        </div>
+
+        <div *ngIf="!loading && orders.length > 0" class="orders-list">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Tracking Number</th>
+                <th>Destination</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let order of orders">
+                <td>{{ order.order_id }}</td>
+                <td>{{ order.tracking_num }}</td>
+                <td>
+                  [{{ order.destination_latitude | number: '1.4-4' }}, 
+                  {{ order.destination_longitude | number: '1.4-4' }}]
+                </td>
+                <td>
+                  <span class="order-status" [ngClass]="getOrderStatusClass(order.state)">
+                    {{ getOrderStatusText(order.state) }}
+                  </span>
+                </td>
+                <td>
+                  <button 
+                    *ngIf="order.state === 'Storage'"
+                    class="request-delivery-button"
+                    (click)="requestDelivery(order)"
+                  >
+                    Request Delivery
+                  </button>
+                  <span *ngIf="order.state === 'Out_for_delivery'">
+                    In progress
+                  </span>
+                  <span *ngIf="order.state === 'Delivered'">
+                    {{ order.delivery_date ? (order.delivery_date | date: 'short') : 'Completed' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

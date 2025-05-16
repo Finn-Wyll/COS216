@@ -1,0 +1,144 @@
+/* src/app/components/customer-dashboard/customer-dashboard.component.css */
+
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-button {
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-content {
+  display: flex;
+  flex: 1;
+}
+
+.dashboard-nav {
+  width: 240px;
+  background-color: #f5f5f5;
+  padding: 1rem 0;
+}
+
+.dashboard-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dashboard-nav li {
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-nav a {
+  display: block;
+  padding: 0.75rem 1.5rem;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.dashboard-nav a:hover {
+  background-color: #e0e0e0;
+}
+
+.dashboard-nav a.active {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 2rem;
+  background-color: #fff;
+}
+
+.dashboard-summary {
+  margin-bottom: 2rem;
+}
+
+.dashboard-summary h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.dashboard-actions {
+  margin-top: 1.5rem;
+}
+
+.action-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.action-button:hover {
+  background-color: #3a80d2;
+}
+
+.notifications {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.notifications h3 {
+  margin-top: 0;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.empty-notifications {
+  color: #888;
+  font-style: italic;
+}
+
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}

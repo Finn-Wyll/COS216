@@ -12,6 +12,8 @@ const WebSocket = require('ws');
 const axios = require('axios');
 const readline = require('readline');
 const process = require('process');
+const { json } = require('stream/consumers');
+
 
 // Create readline interface for server commands
 const rl = readline.createInterface({
@@ -22,7 +24,7 @@ const rl = readline.createInterface({
 // Configuration - Replace with your Wheatley credentials
 // IMPORTANT: Remove credentials before submission
 const WHEATLEY_USERNAME = "u24754120"; 
-const WHEATLEY_PASSWORD = ""; // Removed for security, add your password during testing
+const WHEATLEY_PASSWORD = "Wyllf2006";
 const API_BASE_URL = `https://wheatley.cs.up.ac.za/u24754120/api.php`;
 
 // Initialize Express
@@ -72,6 +74,7 @@ function startServer(port) {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
+    'Authorization': 'Basic ' + btoa(`${WHEATLEY_USERNAME}:${WHEATLEY_PASSWORD}`),
     'Content-Type': 'application/json'
   }
 });
@@ -157,11 +160,13 @@ function setupWebSocketServer() {
 async function handleLogin(ws, data) {
   try {
     // Call the login API with exact format matching the API documentation
-    const response = await apiClient.post('', { 
-      "type": "Login",
-      "email": data.email,
-      "password": data.password
-    });
+const response = await apiClient.post('', { "type": "Login",
+ "email":data.email,
+ "password":data.password
+  });
+
+
+
     
     if (response.data.status === 'success') {
       // Get user information
@@ -191,6 +196,7 @@ async function handleLogin(ws, data) {
       sendMessage(ws, { type: 'LOGIN_FAILED', message: 'Invalid credentials' });
     }
   } catch (error) {
+   
     console.error('Login error:', error.response?.data || error.message);
     sendMessage(ws, { type: 'LOGIN_FAILED', message: 'Login failed' });
   }
@@ -287,7 +293,7 @@ async function handleSelectOrders(ws, data) {
         order_id: orderId,
         latitude: drone.latest_latitude,
         longitude: drone.latest_longitude,
-        state: 'Out_for_delivery'  // Changed to match API
+        state: 'OutForDelivery'
       });
       
       // Add to delivering orders map
@@ -332,7 +338,7 @@ async function handleSelectOrders(ws, data) {
               sendMessage(socket, {
                 type: 'ORDER_UPDATE',
                 orderId: orderId,
-                status: 'Out_for_delivery',
+                status: 'OutForDelivery',
                 message: 'Your order is now out for delivery!',
                 droneId: data.droneId
               });
@@ -488,7 +494,7 @@ async function handleDroneMovement(ws, data) {
         order_id: orderId,
         latitude: newLatitude,
         longitude: newLongitude,
-        state: 'Out_for_delivery'  // Changed to match API
+        state: 'OutForDelivery'
       });
     }
     
@@ -622,48 +628,18 @@ async function handleGetOrders(ws) {
   const clientInfo = clients.get(ws);
   
   try {
-    // If the user is a courier, additionally fetch out-for-delivery orders
-    if (clientInfo.userType === 'Courier') {
-      // First, get all orders from the "Storage" state
-      const storageResponse = await apiClient.post('', {
-        type: 'GetAllOrders',
-        customer_id: clientInfo.id
+    const response = await apiClient.post('', {
+      type: 'GetAllOrders',
+      customer_id: clientInfo.id
+    });
+    
+    if (response.data.status === 'success') {
+      sendMessage(ws, {
+        type: 'ORDERS_LIST',
+        orders: response.data.data
       });
-      
-      // Then, fetch all currently delivering orders
-      const deliveringResponse = await apiClient.post('', {
-        type: 'GetAllDeliveries'
-      });
-      
-      if (storageResponse.data.status === 'success' && deliveringResponse.data.status === 'success') {
-        // Combine both lists of orders
-        const allOrders = [
-          ...storageResponse.data.data,
-          ...deliveringResponse.data.data
-        ];
-        
-        sendMessage(ws, {
-          type: 'ORDERS_LIST',
-          orders: allOrders
-        });
-      } else {
-        sendMessage(ws, { type: 'ERROR', message: 'Failed to get orders' });
-      }
     } else {
-      // For customers, just get their orders
-      const response = await apiClient.post('', {
-        type: 'GetAllOrders',
-        customer_id: clientInfo.id
-      });
-      
-      if (response.data.status === 'success') {
-        sendMessage(ws, {
-          type: 'ORDERS_LIST',
-          orders: response.data.data
-        });
-      } else {
-        sendMessage(ws, { type: 'ERROR', message: 'Failed to get orders' });
-      }
+      sendMessage(ws, { type: 'ERROR', message: 'Failed to get orders' });
     }
   } catch (error) {
     console.error('Get orders error:', error.response?.data || error.message);
@@ -706,9 +682,10 @@ async function handleCourierDisconnect(clientInfo) {
       
       // Notify all customers with orders being delivered by this drone
       for (const orderId of drone.orders) {
-        // Use GetAllDeliveries to find order details
+        // Get order details to find customer
         const ordersResponse = await apiClient.post('', {
-          type: 'GetAllDeliveries'
+          type: 'GetAllOrders',
+          customer_id: clientInfo.id
         });
         
         if (ordersResponse.data.status === 'success') {
@@ -807,9 +784,10 @@ async function handleDroneCrash(droneId, reason) {
     
     // Notify all customers with orders being delivered by this drone
     for (const orderId of drone.orders) {
-      // Get orders that are currently being delivered
+      // Get order details
       const ordersResponse = await apiClient.post('', {
-        type: 'GetAllDeliveries'
+        type: 'GetAllOrders',
+        customer_id: drone.courierId
       });
       
       if (ordersResponse.data.status === 'success') {

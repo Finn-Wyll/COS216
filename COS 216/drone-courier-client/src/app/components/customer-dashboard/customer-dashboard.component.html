@@ -1,0 +1,42 @@
+<!-- src/app/components/customer-dashboard/customer-dashboard.component.html -->
+
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Drone Courier System</h1>
+    <div class="user-info">
+      <span>Welcome, {{ userName }} ({{ userType }})</span>
+      <button class="logout-button" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+    <nav class="dashboard-nav">
+      <ul>
+        <li><a routerLink="/dashboard" routerLinkActive="active">Dashboard</a></li>
+        <li><a routerLink="/orders" routerLinkActive="active">View Orders</a></li>
+      </ul>
+    </nav>
+
+    <main class="dashboard-main">
+      <section class="dashboard-summary">
+        <h2>Dashboard</h2>
+        <p>Welcome to the Drone Courier System. You can view your orders and request deliveries.</p>
+        <div class="dashboard-actions">
+          <a routerLink="/orders" class="action-button">View My Orders</a>
+        </div>
+      </section>
+
+      <section class="notifications">
+        <h3>Recent Notifications</h3>
+        <div *ngIf="notifications.length === 0" class="empty-notifications">
+          No notifications yet
+        </div>
+        <ul *ngIf="notifications.length > 0" class="notification-list">
+          <li *ngFor="let notification of notifications" class="notification-item">
+            {{ notification }}
+          </li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</div>
