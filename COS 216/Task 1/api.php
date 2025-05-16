@@ -531,6 +531,57 @@ else if ($data["type"] == "GetAllOrders") {
 }
 
 /**
+ * @api {POST} /GetAllDeliveries Get all orders
+ * @apiDescription Retrieve all orders
+ *
+ * @apiSampleRequest:
+ * {
+ * "type": "GetAllDeliveries",
+ * }
+ *
+ * @apiSuccessExample Response:
+ * {
+ * "status": "success",
+ * "timestamp": 1699855380,
+ * "data": [
+ * {
+ * "order_id": 2,
+ * "customer_id": 1,
+ * "tracking_num": "CS-23456789",
+ * "destination_latitude": -26.234567,
+ * "destination_longitude": 28.234567,
+ * "state": "OutForDelivery",
+ * "delivery_date": null
+ * }
+ * ]
+ * }
+ *
+ * @apiErrorExample Error Response:
+ * {
+ * "status": "error",
+ * "timestamp": 1699855380,
+ * "data": []
+ * }
+ */
+else if ($data["type"] == "GetAllDeliveries") {
+
+    $stmt = $db->prepare("SELECT * FROM Orders WHERE state = 'Out_for_delivery'");
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $orders = array();
+    while ($row = $result->fetch_assoc()) {
+        $orders[] = $row;
+    }
+    http_response_code(200);
+    echo json_encode([
+        "status" => "success",
+        "timestamp" => time(),
+        "data" => $orders
+    ]);
+}
+
+/**
  * @api {POST} /GetAllDrones Get all drones
  * @apiDescription Retrieve all drones from the system.
  *
