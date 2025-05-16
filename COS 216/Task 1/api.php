@@ -168,7 +168,8 @@ else if($data["type"] == "Login"){
             echo json_encode([
                 "status" => "success",
                 "timestamp" => time(),
-                "id"=>$row["id"]
+                "id"=>$row["id"],
+                "userType"=>$row["type"]
                 ]);
 
         } else {

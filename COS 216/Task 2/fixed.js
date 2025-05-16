@@ -1004,8 +1004,7 @@ async function handleCurrentlyDeliveringCommand() {
     for (const [orderId, details] of deliveringOrders.entries()) {
       // Get order details
       const ordersResponse = await axios.post(API_BASE_URL, {
-        type: 'GetAllOrders',
-        customer_id: details.courierId
+        type: 'GetAllDeliveries',
       });
       
       if (ordersResponse.data.status === 'success') {
