@@ -174,7 +174,7 @@ const response = await apiClient.post('', { "type": "Login",
       
       // We need to determine user type (Customer or Courier)
       // For this example, we'll use the type passed by the client for simplicity
-      const userType = response.data.userType ; // Default to Customer if not specified
+      const userType = response.data.userType ; 
       
       // Update client info
       clients.set(ws, {
