@@ -1,0 +1,231 @@
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.user-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #d32f2f;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 20px;
+}
+
+.map-section {
+  grid-column: 1 / 3;
+  grid-row: 1;
+}
+
+.map-instructions {
+  margin-bottom: 10px;
+  font-style: italic;
+  color: #666;
+}
+
+.controls-section {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.orders-section {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.drone-status {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.drone-status h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.drone-status p {
+  margin: 5px 0;
+}
+
+.no-drone {
+  color: #999;
+  font-style: italic;
+}
+
+.drone-actions {
+  padding: 15px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.drone-actions h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5px;
+  margin-bottom: 15px;
+}
+
+.button-grid button {
+  padding: 10px;
+  font-size: 18px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button-grid button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.button-grid button:hover:not(:disabled) {
+  background-color: #1976d2;
+}
+
+/* Position the buttons in the grid */
+.button-grid button:nth-child(1) {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.button-grid button:nth-child(2) {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.button-grid button:nth-child(3) {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.button-grid button:nth-child(4) {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.deliver-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.deliver-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.deliver-btn:hover:not(:disabled) {
+  background-color: #388e3c;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.order-header {
+  padding: 10px;
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-header h4 {
+  margin: 0;
+}
+
+.order-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.order-status.storage {
+  background-color: #ffeb3b;
+  color: #333;
+}
+
+.order-status.out_for_delivery {
+  background-color: #2196f3;
+  color: white;
+}
+
+.order-status.delivered {
+  background-color: #4caf50;
+  color: white;
+}
+
+.order-body {
+  padding: 10px;
+}
+
+.select-btn {
+  width: 100%;
+  padding: 6px 12px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.select-btn:hover {
+  background-color: #f57c00;
+}
+
+.no-orders {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}

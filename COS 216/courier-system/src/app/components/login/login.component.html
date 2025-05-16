@@ -1,0 +1,30 @@
+<div class="login-container">
+  <h2>Courier System Login</h2>
+  
+  <form (ngSubmit)="onLogin()">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" [(ngModel)]="email" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" [(ngModel)]="password" required>
+    </div>
+    
+    <div class="form-group">
+      <label for="serverPort">Server Port</label>
+      <input type="number" id="serverPort" name="serverPort" [(ngModel)]="serverPort" min="1024" max="49151" required>
+    </div>
+    
+    <button type="submit" [disabled]="!email || !password || serverPort < 1024 || serverPort > 49151">
+      Login
+    </button>
+  </form>
+  
+  <div class="notifications">
+    <div *ngFor="let notification of notifications" class="notification">
+      {{ notification }}
+    </div>
+  </div>
+</div>
