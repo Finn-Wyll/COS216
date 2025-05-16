@@ -166,7 +166,10 @@ async function handleLogin(ws, data) {
     if (response.data.status === 'success') {
       // Get user information
       const userId = response.data.id;
-      const userType = response.data.userType; // Get userType from the response
+      
+      // We need to determine user type (Customer or Courier)
+      // For this example, we'll use the type passed by the client for simplicity
+      const userType = response.data.userType ; // Default to Customer if not specified
       
       // Update client info
       clients.set(ws, {
@@ -1012,37 +1015,32 @@ function setupServerCommands() {
 
 // Handle CURRENTLY_DELIVERING command
 async function handleCurrentlyDeliveringCommand() {
-  if (deliveringOrders.size === 0) {
-    console.log('No orders are currently being delivered.');
-    return;
-  }
-  
+
   console.log('Currently delivering:');
   
   try {
-    // Get all orders that are out for delivery
-    const deliveriesResponse = await apiClient.post('', {
-      type: 'GetAllDeliveries',
-    });
-    
-    if (deliveriesResponse.data.status === 'success') {
-      const deliveries = deliveriesResponse.data.data;
+  
+      // Get order details
+      const ordersResponse = await apiClient.post("", {
+        type: 'GetAllDeliveries',
+      });
       
-      for (const order of deliveries) {
-        const orderDetails = deliveringOrders.get(parseInt(order.order_id));
+      if (ordersResponse.data.status === 'success') {
+        const orders = ordersResponse.data.data;
         
-        if (orderDetails) {
+       for( i=0;i<orders.length;i++){
+       var order=orders[i];
+        
+        if (order) {
           console.log(`Order ID: ${order.order_id}`);
-          console.log(`Tracking Number: ${order.tracking_num}`);
+          console.log(`Customer ID: ${order.customer_id}`);
           console.log(`Destination: [${order.destination_latitude}, ${order.destination_longitude}]`);
-          console.log(`Current Location: [${order.latitude || 'N/A'}, ${order.longitude || 'N/A'}]`);
-          console.log(`Delivered by: Courier ID ${orderDetails.courierId} (${orderDetails.courierEmail}) with Drone ID: ${orderDetails.droneId}`);
+          console.log(`Tracking number: ${order.tracking_num}`);
           console.log('---');
         }
       }
-    } else {
-      console.log('Failed to fetch delivery information');
-    }
+      }
+    
   } catch (error) {
     console.error('Error fetching order details:', error.message);
   }
