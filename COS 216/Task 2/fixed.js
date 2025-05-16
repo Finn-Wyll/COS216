@@ -12,6 +12,8 @@ const WebSocket = require('ws');
 const axios = require('axios');
 const readline = require('readline');
 const process = require('process');
+const { json } = require('stream/consumers');
+
 
 // Create readline interface for server commands
 const rl = readline.createInterface({
@@ -23,10 +25,11 @@ const rl = readline.createInterface({
 // IMPORTANT: Remove credentials before submission
 const WHEATLEY_USERNAME = "u24754120"; 
 const WHEATLEY_PASSWORD = "Wyllf2006";
-const API_BASE_URL = `http://${WHEATLEY_USERNAME}:${WHEATLEY_PASSWORD}@wheatley.cs.up.ac.za/u24754120/cos216hw/api.php`;
+const API_BASE_URL = `https://wheatley.cs.up.ac.za/u24754120/api.php`;
 
 // Initialize Express
-const app = express();
+var app = express();
+
 const server = http.createServer(app);
 
 // Initialize WebSocket server
@@ -66,6 +69,15 @@ function startServer(port) {
     setupServerCommands();
   });
 }
+
+// Create axios instance with authentication headers
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Authorization': 'Basic ' + btoa(`${WHEATLEY_USERNAME}:${WHEATLEY_PASSWORD}`),
+    'Content-Type': 'application/json'
+  }
+});
 
 // Setup WebSocket server
 function setupWebSocketServer() {
@@ -148,11 +160,13 @@ function setupWebSocketServer() {
 async function handleLogin(ws, data) {
   try {
     // Call the login API with exact format matching the API documentation
-    const response = await axios.post(API_BASE_URL, {
-      "type": "Login",
-      "email": data.email,
-      "password": data.password
-    });
+const response = await apiClient.post('', { "type": "Login",
+ "email":data.email,
+ "password":data.password
+  });
+
+
+
     
     if (response.data.status === 'success') {
       // Get user information
@@ -182,6 +196,7 @@ async function handleLogin(ws, data) {
       sendMessage(ws, { type: 'LOGIN_FAILED', message: 'Invalid credentials' });
     }
   } catch (error) {
+   
     console.error('Login error:', error.response?.data || error.message);
     sendMessage(ws, { type: 'LOGIN_FAILED', message: 'Login failed' });
   }
@@ -198,7 +213,7 @@ async function handleRequestDelivery(ws, data) {
   
   try {
     // Call the CreateOrder API
-    const response = await axios.post(API_BASE_URL, {
+    const response = await apiClient.post('', {
       type: 'CreateOrder',
       customer_id: clientInfo.id,
       order_id: data.orderId,
@@ -242,7 +257,7 @@ async function handleSelectOrders(ws, data) {
   
   try {
     // Check if drone is available
-    const dronesResponse = await axios.post(API_BASE_URL, {
+    const dronesResponse = await apiClient.post('', {
       type: 'GetAllDrones'
     });
     
@@ -260,7 +275,7 @@ async function handleSelectOrders(ws, data) {
     }
     
     // Update drone status
-    await axios.post(API_BASE_URL, {
+    await apiClient.post('', {
       type: 'UpdateDrone',
       drone_id: data.droneId,
       current_operator_id: clientInfo.id,
@@ -273,7 +288,7 @@ async function handleSelectOrders(ws, data) {
     
     // Update orders to "Out for delivery"
     for (const orderId of data.orderIds) {
-      await axios.post(API_BASE_URL, {
+      await apiClient.post('', {
         type: 'UpdateOrder',
         order_id: orderId,
         latitude: drone.latest_latitude,
@@ -307,7 +322,7 @@ async function handleSelectOrders(ws, data) {
     
     // Notify customers about their order being out for delivery
     for (const orderId of data.orderIds) {
-      const orderResponse = await axios.post(API_BASE_URL, {
+      const orderResponse = await apiClient.post('', {
         type: 'GetAllOrders',
         customer_id: clientInfo.id
       });
@@ -461,7 +476,7 @@ async function handleDroneMovement(ws, data) {
   
   try {
     // Update drone position in database
-    await axios.post(API_BASE_URL, {
+    await apiClient.post('', {
       type: 'UpdateDrone',
       drone_id: droneId,
       current_operator_id: clientInfo.id,
@@ -474,7 +489,7 @@ async function handleDroneMovement(ws, data) {
     
     // Update orders that are being delivered by this drone
     for (const orderId of drone.orders) {
-      await axios.post(API_BASE_URL, {
+      await apiClient.post('', {
         type: 'UpdateOrder',
         order_id: orderId,
         latitude: newLatitude,
@@ -529,7 +544,7 @@ async function handleMarkDelivered(ws, data) {
   
   try {
     // Get order details
-    const ordersResponse = await axios.post(API_BASE_URL, {
+    const ordersResponse = await apiClient.post('', {
       type: 'GetAllOrders',
       customer_id: clientInfo.id
     });
@@ -562,7 +577,7 @@ async function handleMarkDelivered(ws, data) {
     }
     
     // Mark order as delivered
-    await axios.post(API_BASE_URL, {
+    await apiClient.post('', {
       type: 'UpdateOrder',
       order_id: data.orderId,
       latitude: order.destination_latitude,
@@ -613,7 +628,7 @@ async function handleGetOrders(ws) {
   const clientInfo = clients.get(ws);
   
   try {
-    const response = await axios.post(API_BASE_URL, {
+    const response = await apiClient.post('', {
       type: 'GetAllOrders',
       customer_id: clientInfo.id
     });
@@ -635,7 +650,7 @@ async function handleGetOrders(ws) {
 // Handle get all drones
 async function handleGetDrones(ws) {
   try {
-    const response = await axios.post(API_BASE_URL, {
+    const response = await apiClient.post('', {
       type: 'GetAllDrones'
     });
     
@@ -668,7 +683,7 @@ async function handleCourierDisconnect(clientInfo) {
       // Notify all customers with orders being delivered by this drone
       for (const orderId of drone.orders) {
         // Get order details to find customer
-        const ordersResponse = await axios.post(API_BASE_URL, {
+        const ordersResponse = await apiClient.post('', {
           type: 'GetAllOrders',
           customer_id: clientInfo.id
         });
@@ -690,7 +705,7 @@ async function handleCourierDisconnect(clientInfo) {
             }
             
             // Reset order to Storage state
-            await axios.post(API_BASE_URL, {
+            await apiClient.post('', {
               type: 'UpdateOrder',
               order_id: orderId,
               latitude: order.destination_latitude,
@@ -705,7 +720,7 @@ async function handleCourierDisconnect(clientInfo) {
       }
       
       // Update drone to crashed state
-      await axios.post(API_BASE_URL, {
+      await apiClient.post('', {
         type: 'UpdateDrone',
         drone_id: droneId,
         current_operator_id: null,
@@ -741,7 +756,7 @@ async function handleDroneCrash(droneId, reason) {
     console.log(`Drone ${droneId} crashed: ${reason}`);
     
     // Update drone to crashed state
-    await axios.post(API_BASE_URL, {
+    await apiClient.post('', {
       type: 'UpdateDrone',
       drone_id: droneId,
       current_operator_id: null,
@@ -770,7 +785,7 @@ async function handleDroneCrash(droneId, reason) {
     // Notify all customers with orders being delivered by this drone
     for (const orderId of drone.orders) {
       // Get order details
-      const ordersResponse = await axios.post(API_BASE_URL, {
+      const ordersResponse = await apiClient.post('', {
         type: 'GetAllOrders',
         customer_id: drone.courierId
       });
@@ -792,7 +807,7 @@ async function handleDroneCrash(droneId, reason) {
           }
           
           // Reset order to Storage state
-          await axios.post(API_BASE_URL, {
+          await apiClient.post('', {
             type: 'UpdateOrder',
             order_id: orderId,
             latitude: order.destination_latitude,
@@ -833,7 +848,7 @@ async function resetDroneAtHQ(droneId, operatorId) {
     console.log(`Drone ${droneId} has returned to HQ`);
     
     // Reset drone in database
-    await axios.post(API_BASE_URL, {
+    await apiClient.post('', {
       type: 'UpdateDrone',
       drone_id: droneId,
       current_operator_id: null, // Reset operator
