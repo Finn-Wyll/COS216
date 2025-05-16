@@ -1,13 +1,9 @@
-// src/app/app.module.ts
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
 
-// Import AppRoutingModule correctly
 import { AppRoutingModule } from './app-routing.module';
-
 import { AppComponent } from './app.component';
 import { LoginComponent } from './components/login/login.component';
 import { CustomerDashboardComponent } from './components/customer-dashboard/customer-dashboard.component';
@@ -24,13 +20,7 @@ import { NotificationsComponent } from './components/notifications/notifications
     MapComponent,
     NotificationsComponent
   ],
-  imports: [
-    BrowserModule,
-    AppRoutingModule, // Make sure this matches the export name in app-routing.module.ts
-    FormsModule,
-    HttpClientModule,
-    CommonModule
-  ],
+  imports: [BrowserModule,AppRoutingModule,FormsModule,HttpClientModule],
   providers: [],
   bootstrap: [AppComponent]
 })
