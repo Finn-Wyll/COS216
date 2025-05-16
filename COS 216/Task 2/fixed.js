@@ -993,33 +993,32 @@ function setupServerCommands() {
 
 // Handle CURRENTLY_DELIVERING command
 async function handleCurrentlyDeliveringCommand() {
-  if (deliveringOrders.size === 0) {
-    console.log('No orders are currently being delivered.');
-    return;
-  }
-  
+
   console.log('Currently delivering:');
   
   try {
-    for (const [orderId, details] of deliveringOrders.entries()) {
+  
       // Get order details
-      const ordersResponse = await axios.post(API_BASE_URL, {
-        type: 'GetAllOrders',
-        customer_id: details.courierId
+      const ordersResponse = await apiClient.post("", {
+        type: 'GetAllDeliveries',
       });
       
       if (ordersResponse.data.status === 'success') {
         const orders = ordersResponse.data.data;
-        const order = orders.find(o => o.order_id === orderId);
+        
+       for( i=0;i<orders.length;i++){
+       var order=orders[i];
         
         if (order) {
-          console.log(`Order ID: ${orderId}`);
+          console.log(`Order ID: ${order.order_id}`);
+          console.log(`Customer ID: ${order.customer_id}`);
           console.log(`Destination: [${order.destination_latitude}, ${order.destination_longitude}]`);
-          console.log(`Delivered by: ${details.courierEmail} with Drone ID: ${details.droneId}`);
+          console.log(`Tracking number: ${order.tracking_num}`);
           console.log('---');
         }
       }
-    }
+      }
+    
   } catch (error) {
     console.error('Error fetching order details:', error.message);
   }
