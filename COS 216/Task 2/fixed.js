@@ -1002,18 +1002,31 @@ async function handleCurrentlyDeliveringCommand() {
       const ordersResponse = await apiClient.post("", {
         type: 'GetAllDeliveries',
       });
+     
       
       if (ordersResponse.data.status === 'success') {
         const orders = ordersResponse.data.data;
         
        for( i=0;i<orders.length;i++){
        var order=orders[i];
+
+
         
         if (order) {
           console.log(`Order ID: ${order.order_id}`);
           console.log(`Customer ID: ${order.customer_id}`);
           console.log(`Destination: [${order.destination_latitude}, ${order.destination_longitude}]`);
           console.log(`Tracking number: ${order.tracking_num}`);
+          console.log(`Products:`);
+          // get the products
+           var ProductsResponse = await apiClient.post("", {
+        type: 'GetProducts',
+        order_id: order.order_id
+  
+      });
+       var products = ProductsResponse.data.data;
+       for( j=0;j<products.length;j++)
+          console.log(products[i])
           console.log('---');
         }
       }

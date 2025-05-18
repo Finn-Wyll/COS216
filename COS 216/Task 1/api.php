@@ -639,6 +639,25 @@ else if ($data["type"] == "GetAllDrones") {
         "data" => $drones
     ]);
 }
+else if ($data["type"] == "GetProducts") {
+    $order_id = $data['order_id'];
+
+    //get user type
+    $stmt = $db->prepare("SELECT * FROM Orders_Products JOIN Products ON Products.id = Orders_Products.product_id WHERE order_id = ?");
+    $stmt->bind_param("i", $order_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $products = array();
+    while ($row = $result->fetch_assoc()) {
+        $products[] = $row["title"];
+    }
+    http_response_code(200);
+    echo json_encode([
+        "status" => "success",
+        "timestamp" => time(),
+        "data" => $products
+    ]);
+}
 
 
 else{
