@@ -168,7 +168,8 @@ else if($data["type"] == "Login"){
             echo json_encode([
                 "status" => "success",
                 "timestamp" => time(),
-                "id"=>$row["id"]
+                "id"=>$row["id"],
+                "userType"=>$row["type"]
                 ]);
 
         } else {
@@ -513,9 +514,60 @@ else if ($data["type"] == "GetAllOrders") {
     if ($userType == "Courier") {
         $stmt = $db->prepare("SELECT * FROM Orders WHERE state = 'Storage'");
     } else {
-        $stmt = $db->prepare("SELECT * FROM Orders WHERE customer_id = ? AND state = 'Storage'");
+        $stmt = $db->prepare("SELECT * FROM Orders WHERE customer_id = ?");
         $stmt->bind_param("i", $customer_id);
     }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $orders = array();
+    while ($row = $result->fetch_assoc()) {
+        $orders[] = $row;
+    }
+    http_response_code(200);
+    echo json_encode([
+        "status" => "success",
+        "timestamp" => time(),
+        "data" => $orders
+    ]);
+}
+
+/**
+ * @api {POST} /GetAllDeliveries Get all orders
+ * @apiDescription Retrieve all orders
+ *
+ * @apiSampleRequest:
+ * {
+ * "type": "GetAllDeliveries",
+ * }
+ *
+ * @apiSuccessExample Response:
+ * {
+ * "status": "success",
+ * "timestamp": 1699855380,
+ * "data": [
+ * {
+ * "order_id": 2,
+ * "customer_id": 1,
+ * "tracking_num": "CS-23456789",
+ * "destination_latitude": -26.234567,
+ * "destination_longitude": 28.234567,
+ * "state": "OutForDelivery",
+ * "delivery_date": null
+ * }
+ * ]
+ * }
+ *
+ * @apiErrorExample Error Response:
+ * {
+ * "status": "error",
+ * "timestamp": 1699855380,
+ * "data": []
+ * }
+ */
+else if ($data["type"] == "GetAllDeliveries") {
+
+    $stmt = $db->prepare("SELECT * FROM Orders WHERE state = 'Out_for_delivery'");
+
     $stmt->execute();
     $result = $stmt->get_result();
     $orders = array();
@@ -588,69 +640,6 @@ else if ($data["type"] == "GetAllDrones") {
     ]);
 }
 
-/**
- * @api {POST} /GetAllOrders Get all orders
- * @apiDescription Retrieve all orders, with optional filtering by customer.
- * @apiParam {int} customer_id (Optional) ID of the customer to filter orders.
- *
- * @apiSampleRequest:
- * {
- * "type": "GetAllOrders",
- * "customer_id": 1
- * }
- *
- * @apiSuccessExample Response:
- * {
- * "status": "success",
- * "timestamp": 1699855380,
- * "data": [
- * {
- * "order_id": 1,
- * "customer_id": 1,
- * "tracking_num": "CS-12345678",
- * "destination_latitude": -26.123456,
- * "destination_longitude": 28.123456,
- * "state": "Storage",
- * "delivery_date": null
- * },
- * {
- * "order_id": 2,
- * "customer_id": 1,
- * "tracking_num": "CS-23456789",
- * "destination_latitude": -26.234567,
- * "destination_longitude": 28.234567,
- * "state": "OutForDelivery",
- * "delivery_date": null
- * }
- * ]
- * }
- *
- * @apiErrorExample Error Response:
- * {
- * "status": "error",
- * "timestamp": 1699855380,
- * "data": []
- * }
- */
-else if ($data["type"] == "GetProducts") {
-    $order_id = $data['order_id'];
-
-    //get user type
-    $stmt = $db->prepare("SELECT * FROM Orders_Products JOIN Products ON Products.id = Orders_Products.product_id WHERE order_id = ?");
-    $stmt->bind_param("i", $order_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $orders = array();
-    while ($row = $result->fetch_assoc()) {
-        $orders[] = $row["title"];
-    }
-    http_response_code(200);
-    echo json_encode([
-        "status" => "success",
-        "timestamp" => time(),
-        "data" => $orders
-    ]);
-}
 
 else{
      http_response_code(400);

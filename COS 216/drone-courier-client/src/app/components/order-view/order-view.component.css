@@ -82,12 +82,35 @@
   flex: 1;
   padding: 2rem;
   background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 .orders-section h2 {
-  margin-top: 0;
+  margin: 0;
   color: #333;
-  margin-bottom: 1.5rem;
+}
+
+.refresh-button {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover {
+  background-color: #3a80d2;
 }
 
 .loading-message, .empty-orders {
@@ -160,4 +183,110 @@
 .request-delivery-button:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.map-section {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.map-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.map-wrapper {
+  height: 400px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  margin-bottom: 1rem;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+}
+
+.hq-legend {
+  background-color: #e74c3c;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  font-size: 0.75rem;
+  border: 1px solid white;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+}
+
+.customer-legend, .drone-legend {
+  font-size: 1.25rem;
+}
+
+.dust-devil-legend {
+  width: 20px;
+  height: 20px;
+  background-color: #ff9800;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+.drone-status {
+  background-color: #e8f4fd;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.drone-status h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.drone-status p {
+  margin: 0.25rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-content {
+    flex-direction: column;
+  }
+  
+  .dashboard-nav {
+    width: 100%;
+    padding: 0.5rem 0;
+  }
+  
+  .dashboard-nav ul {
+    display: flex;
+    overflow-x: auto;
+  }
+  
+  .dashboard-nav li {
+    margin-bottom: 0;
+    margin-right: 0.5rem;
+  }
 }

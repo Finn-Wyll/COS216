@@ -7,3 +7,28 @@
   border-radius: 8px;
   z-index: 1;
 }
+
+/* Custom markers */
+.hq-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #e74c3c;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.drone-icon {
+  font-size: 24px; 
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+.customer-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}

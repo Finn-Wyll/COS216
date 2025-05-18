@@ -26,6 +26,25 @@
         </div>
       </section>
 
+      <section class="map-container">
+        <h3>Live Drone Tracking</h3>
+        <div class="map-wrapper">
+          <app-map 
+            [centerLatitude]="-25.7545" 
+            [centerLongitude]="28.2314"
+            [dronePosition]="dronePosition"
+            [dustDevils]="dustDevils"
+          ></app-map>
+        </div>
+        <div *ngIf="dronePosition" class="drone-info">
+          <p><strong>Drone Position:</strong> [{{ dronePosition.latitude.toFixed(4) }}, {{ dronePosition.longitude.toFixed(4) }}]</p>
+          <p><strong>Altitude:</strong> {{ dronePosition.altitude }} meters</p>
+        </div>
+        <div *ngIf="!dronePosition" class="no-drone-info">
+          <p>No active drone deliveries at the moment.</p>
+        </div>
+      </section>
+
       <section class="notifications">
         <h3>Recent Notifications</h3>
         <div *ngIf="notifications.length === 0" class="empty-notifications">

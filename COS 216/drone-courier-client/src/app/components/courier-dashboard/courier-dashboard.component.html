@@ -1,0 +1,208 @@
+<!-- src/app/components/courier-dashboard/courier-dashboard.component.html -->
+
+<div class="courier-dashboard-container">
+  <header class="dashboard-header">
+    <h1>Drone Courier System</h1>
+    <div class="user-info">
+      <span>Welcome, {{ userName }} ({{ userType }})</span>
+      <button class="logout-button" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+    <main class="courier-main">
+      <!-- Live Map Section -->
+      <section class="map-section">
+        <h2>Drone Operation</h2>
+        <div class="map-container">
+          <app-map 
+            [centerLatitude]="-25.7545" 
+            [centerLongitude]="28.2314"
+            [dronePosition]="dronePosition"
+            [dustDevils]="dustDevils"
+            [customerMarkers]="customerMarkers"
+          ></app-map>
+        </div>
+        
+        <div class="drone-controls" *ngIf="isOperatingDrone">
+          <h3>Drone Controls</h3>
+          <div class="drone-status">
+            <div class="status-item">
+              <span class="status-label">Position:</span>
+              <span class="status-value" *ngIf="dronePosition">
+                [{{ dronePosition.latitude.toFixed(4) }}, {{ dronePosition.longitude.toFixed(4) }}]
+              </span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Altitude:</span>
+              <span class="status-value" *ngIf="dronePosition">{{ dronePosition.altitude }}m</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Battery:</span>
+              <span class="status-value" [class.battery-low]="batteryLevel < 20">{{ batteryLevel.toFixed(1) }}%</span>
+            </div>
+          </div>
+          
+          <div class="control-buttons">
+            <div class="control-row">
+              <button class="control-button" (click)="moveDrone('UP')">⬆️ Up</button>
+            </div>
+            <div class="control-row">
+              <button class="control-button" (click)="moveDrone('LEFT')">⬅️ Left</button>
+              <button class="control-button" (click)="moveDrone('RIGHT')">Right ➡️</button>
+            </div>
+            <div class="control-row">
+              <button class="control-button" (click)="moveDrone('DOWN')">⬇️ Down</button>
+            </div>
+          </div>
+          
+          <div class="delivery-info">
+            <h4>Delivery Instructions</h4>
+            <ul>
+              <li>Use arrow keys or buttons to navigate the drone</li>
+              <li>Avoid dust devils (orange circles)</li>
+              <li>Navigate to each customer location</li>
+              <li>Mark orders as delivered when at destination</li>
+              <li>Return to HQ when all deliveries are complete</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Orders and Drones Section -->
+      <section class="operations-section">
+        <div class="orders-container" *ngIf="!isOperatingDrone">
+          <h3>Available Orders</h3>
+          <button class="refresh-button" (click)="loadOrders()">Refresh</button>
+          
+          <div *ngIf="orders.length === 0" class="empty-data">
+            No orders available for delivery
+          </div>
+          
+          <div *ngIf="orders.length > 0" class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Select</th>
+                  <th>Order ID</th>
+                  <th>Tracking #</th>
+                  <th>Destination</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let order of orders">
+                  <td>
+                    <input 
+                      type="checkbox" 
+                      [checked]="selectedOrders.includes(order.order_id)"
+                      (change)="toggleOrderSelection(order.order_id)"
+                    >
+                  </td>
+                  <td>{{ order.order_id }}</td>
+                  <td>{{ order.tracking_num }}</td>
+                  <td>[{{ order.destination_latitude.toFixed(4) }}, {{ order.destination_longitude.toFixed(4) }}]</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="drones-container">
+            <h3>Available Drones</h3>
+            <button class="refresh-button" (click)="loadDrones()">Refresh</button>
+            
+            <div *ngIf="drones.length === 0" class="empty-data">
+              No drones available
+            </div>
+            
+            <div *ngIf="drones.length > 0" class="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Drone ID</th>
+                    <th>Status</th>
+                    <th>Battery</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let drone of drones">
+                    <td>{{ drone.id }}</td>
+                    <td>{{ drone.is_available ? 'Available' : 'In Use' }}</td>
+                    <td>{{ drone.battery_level }}%</td>
+                    <td>
+                      <button 
+                        class="select-button" 
+                        [disabled]="!drone.is_available"
+                        (click)="selectDrone(drone)"
+                      >
+                        Select
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="delivery-actions">
+            <button 
+              class="start-delivery-button" 
+              [disabled]="!selectedDrone || selectedOrders.length === 0"
+              (click)="startDelivery()"
+            >
+              Start Delivery
+            </button>
+            <div class="selection-info" *ngIf="selectedDrone">
+              <p>Selected Drone: #{{ selectedDrone.id }}</p>
+              <p>Orders Selected: {{ selectedOrders.length }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="active-delivery" *ngIf="isOperatingDrone">
+          <h3>Active Deliveries</h3>
+          
+          <div class="data-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Destination</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let marker of customerMarkers">
+                  <td>{{ marker.id }}</td>
+                  <td>[{{ marker.latitude.toFixed(4) }}, {{ marker.longitude.toFixed(4) }}]</td>
+                  <td>
+                    <button 
+                      class="deliver-button"
+                      (click)="markAsDelivered(marker.id)"
+                    >
+                      Mark as Delivered
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="notifications-container">
+          <h3>Notifications</h3>
+          <div class="notifications-list">
+            <div *ngIf="notifications.length === 0" class="empty-data">
+              No notifications
+            </div>
+            <div *ngIf="notifications.length > 0" class="notification-items">
+              <div *ngFor="let notification of notifications" class="notification-item">
+                {{ notification }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

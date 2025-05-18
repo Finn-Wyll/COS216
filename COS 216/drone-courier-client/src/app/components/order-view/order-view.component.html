@@ -19,7 +19,10 @@
 
     <main class="dashboard-main">
       <section class="orders-section">
-        <h2>My Orders</h2>
+        <div class="orders-header">
+          <h2>My Orders</h2>
+          <button class="refresh-button" (click)="refreshOrders()">Refresh</button>
+        </div>
         
         <div *ngIf="error" class="error-message">
           {{ error }}
@@ -75,6 +78,44 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section class="map-section">
+        <h3>Orders Map</h3>
+        <div class="map-wrapper">
+          <app-map 
+            [centerLatitude]="-25.7545" 
+            [centerLongitude]="28.2314"
+            [dronePosition]="dronePosition"
+            [dustDevils]="dustDevils"
+            [customerMarkers]="customerMarkers"
+          ></app-map>
+        </div>
+        
+        <div class="map-legend">
+          <div class="legend-item">
+            <div class="legend-icon hq-legend">HQ</div>
+            <div class="legend-text">Headquarters</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-icon customer-legend">📦</div>
+            <div class="legend-text">Your Delivery Address</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-icon drone-legend">🚁</div>
+            <div class="legend-text">Drone</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-icon dust-devil-legend"></div>
+            <div class="legend-text">Dust Devil (Danger Zone)</div>
+          </div>
+        </div>
+        
+        <div *ngIf="dronePosition" class="drone-status">
+          <h4>Active Drone</h4>
+          <p><strong>Position:</strong> [{{ dronePosition.latitude.toFixed(4) }}, {{ dronePosition.longitude.toFixed(4) }}]</p>
+          <p><strong>Altitude:</strong> {{ dronePosition.altitude }} meters</p>
         </div>
       </section>
     </main>

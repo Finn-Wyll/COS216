@@ -7,12 +7,14 @@ import { Subject, takeUntil } from 'rxjs';
 import { WebSocketService } from '../../services/websocket.service';
 import { AuthService } from '../../services/auth.service';
 import { OrderService } from '../../services/order.service';
+import { DustDevilService } from '../../services/dust-devil.service';
 import { Order } from '../../models/order.model';
+import { MapComponent } from '../map/map.component';
 
 @Component({
   selector: 'app-order-view',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, MapComponent],
   templateUrl: './order-view.component.html',
   styleUrls: ['./order-view.component.css']
 })
@@ -22,12 +24,17 @@ export class OrderViewComponent implements OnInit, OnDestroy {
   error: string = '';
   userName: string = '';
   userType: string = '';
+  dronePosition: { latitude: number, longitude: number, altitude: number } | null = null;
+  dustDevils: Array<{latitude: number, longitude: number}> = [];
+  customerMarkers: Array<{id: number, latitude: number, longitude: number}> = [];
+  
   private destroy$ = new Subject<void>();
 
   constructor(
     private webSocketService: WebSocketService,
     private authService: AuthService,
-    private orderService: OrderService
+    private orderService: OrderService,
+    private dustDevilService: DustDevilService
   ) {}
 
   ngOnInit(): void {
@@ -47,6 +54,20 @@ export class OrderViewComponent implements OnInit, OnDestroy {
       .subscribe(orders => {
         this.orders = orders;
         this.loading = false;
+        
+        // Create customer markers for map
+        this.customerMarkers = orders.map(order => ({
+          id: order.order_id,
+          latitude: order.destination_latitude, 
+          longitude: order.destination_longitude
+        }));
+      });
+
+    // Get dust devils
+    this.dustDevilService.dustDevils$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(dustDevils => {
+        this.dustDevils = dustDevils;
       });
 
     // Listen for WebSocket messages
@@ -55,6 +76,15 @@ export class OrderViewComponent implements OnInit, OnDestroy {
       .subscribe(message => {
         if (message.type === 'ERROR') {
           this.error = message.message;
+        }
+        
+        // Handle drone position updates
+        if (message.type === 'DRONE_POSITION') {
+          this.dronePosition = {
+            latitude: message.latitude,
+            longitude: message.longitude,
+            altitude: message.altitude
+          };
         }
       });
 
@@ -81,7 +111,7 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     switch (status) {
       case 'Storage':
         return 'status-storage';
-      case 'OutForDelivery':
+      case 'Out_for_delivery':
         return 'status-out-for-delivery';
       case 'Delivered':
         return 'status-delivered';
@@ -94,7 +124,7 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     switch (status) {
       case 'Storage':
         return 'In Storage';
-      case 'OutForDelivery':
+      case 'Out_for_delivery':
         return 'Out For Delivery';
       case 'Delivered':
         return 'Delivered';
@@ -106,6 +136,11 @@ export class OrderViewComponent implements OnInit, OnDestroy {
   logout(): void {
     this.authService.logout();
     this.webSocketService.disconnect();
+  }
+
+  refreshOrders(): void {
+    this.loading = true;
+    this.orderService.getOrders();
   }
 
   ngOnDestroy(): void {

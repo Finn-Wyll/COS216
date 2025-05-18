@@ -1,6 +1,7 @@
 // src/app/services/auth.service.ts
 
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, filter, map } from 'rxjs';
 import { User } from '../models/user.model';
 import { WebSocketService } from './websocket.service';
@@ -12,7 +13,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private webSocketService: WebSocketService) {
+  constructor(
+    private webSocketService: WebSocketService,
+    private router: Router
+  ) {
     // Listen for login responses from the WebSocket
     this.webSocketService.messages$.pipe(
       filter(message => message.type === 'LOGIN_SUCCESS')
@@ -26,6 +30,17 @@ export class AuthService {
       };
       this.currentUserSubject.next(user);
       localStorage.setItem('currentUser', JSON.stringify(user));
+      
+      setTimeout(() => {
+        // Redirect based on user type
+        if (user.type === 'Customer') {
+          console.log('Navigating to dashboard...');
+          this.router.navigate(['/dashboard']);
+        } else if (user.type === 'Courier') {
+          console.log('Navigating to courier dashboard...');
+          this.router.navigate(['/courier']);
+        }
+      }, 100);
     });
 
     // Check if user is already logged in
@@ -46,6 +61,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('currentUser');
     this.currentUserSubject.next(null);
+    this.router.navigate(['/login']);
   }
 
   get currentUser(): User | null {

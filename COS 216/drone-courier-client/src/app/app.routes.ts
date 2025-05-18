@@ -5,9 +5,9 @@ import { inject } from '@angular/core';
 import { AuthService } from './services/auth.service';
 import { map } from 'rxjs';
 
-// Will create these components next
 import { LoginComponent } from './components/login/login.component';
 import { CustomerDashboardComponent } from './components/customer-dashboard/customer-dashboard.component';
+import { CourierDashboardComponent } from './components/courier-dashboard/courier-dashboard.component';
 import { OrderViewComponent } from './components/order-view/order-view.component';
 
 export const routes: Routes = [
@@ -27,7 +27,17 @@ export const routes: Routes = [
     canActivate: [() => {
       const authService = inject(AuthService);
       return authService.currentUser$.pipe(
-        map(user => !!user?.authenticated)
+        map(user => !!user?.authenticated && user.type === 'Customer')
+      );
+    }]
+  },
+  { 
+    path: 'courier', 
+    component: CourierDashboardComponent,
+    canActivate: [() => {
+      const authService = inject(AuthService);
+      return authService.currentUser$.pipe(
+        map(user => !!user?.authenticated && user.type === 'Courier')
       );
     }]
   },
@@ -41,6 +51,13 @@ export const routes: Routes = [
       );
     }]
   },
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
-  { path: '**', redirectTo: '/login' }
+  { 
+    path: '', 
+    redirectTo: '/login', 
+    pathMatch: 'full' 
+  },
+  { 
+    path: '**', 
+    redirectTo: '/login' 
+  }
 ];
