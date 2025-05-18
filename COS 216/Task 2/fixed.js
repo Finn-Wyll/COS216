@@ -174,7 +174,7 @@ const response = await apiClient.post('', { "type": "Login",
       
       // We need to determine user type (Customer or Courier)
       // For this example, we'll use the type passed by the client for simplicity
-      const userType = response.data.userType ; // Default to Customer if not specified
+      const userType = response.data.userType ; 
       
       // Update client info
       clients.set(ws, {
@@ -216,7 +216,6 @@ async function handleRequestDelivery(ws, data) {
     const response = await apiClient.post('', {
       type: 'CreateOrder',
       customer_id: clientInfo.id,
-      order_id: data.orderId,
       destination_latitude: data.latitude,
       destination_longitude: data.longitude
     });
@@ -1002,18 +1001,31 @@ async function handleCurrentlyDeliveringCommand() {
       const ordersResponse = await apiClient.post("", {
         type: 'GetAllDeliveries',
       });
-      
+     
+      var ProductsResponse;
       if (ordersResponse.data.status === 'success') {
         const orders = ordersResponse.data.data;
         
        for( i=0;i<orders.length;i++){
        var order=orders[i];
+
+
         
         if (order) {
           console.log(`Order ID: ${order.order_id}`);
           console.log(`Customer ID: ${order.customer_id}`);
           console.log(`Destination: [${order.destination_latitude}, ${order.destination_longitude}]`);
           console.log(`Tracking number: ${order.tracking_num}`);
+          console.log(`Products:`);
+          // get the products
+            ProductsResponse = await apiClient.post("", {
+        type: 'GetProducts',
+        order_id: order.order_id
+  
+      });
+       var products = ProductsResponse.data.data;
+       for( j=0;j<products.length;j++)
+          console.log(products[j])
           console.log('---');
         }
       }
@@ -1052,23 +1064,33 @@ function handleKillCommand(username) {
 }
 
 // Handle DRONE_STATUS command
-function handleDroneStatusCommand() {
-  if (activeDrones.size === 0) {
-    console.log('No active drones.');
-    return;
-  }
+async function handleDroneStatusCommand() {
+
+
+console.log('Active drones:');
+const dronesResponse = await apiClient.post("", {
+        type: 'GetAllDrones'
+      });
+     
+      
+      if (dronesResponse.data.status === 'success') {
+        const dronesArr = dronesResponse.data.data;
+        
+       for( i=0;i<dronesArr.length;i++){
+       var droneData=dronesArr[i];
+
+ 
   
-  console.log('Active drones:');
   
-  for (const [droneId, drone] of activeDrones.entries()) {
-    console.log(`Drone ID: ${droneId}`);
-    console.log(`Battery Level: ${drone.batteryLevel.toFixed(1)}%`);
-    console.log(`Altitude: ${drone.altitude} meters`);
-    console.log(`Current Operator: ${drone.courierEmail} (ID: ${drone.courierId})`);
-    console.log(`GPS Coordinates: [${drone.latitude}, ${drone.longitude}]`);
-    console.log(`Orders being delivered: ${drone.orders.join(', ') || 'None'}`);
+  
+  
+    console.log(`Drone ID: ${droneData.id}`);
+    console.log(`Battery Level: ${droneData.battery_level.toFixed(1)}%`);
+    console.log(`Altitude: ${droneData.altitude} meters`);
+    console.log(`GPS Coordinates: [${droneData.latest_latitude}, ${droneData.latest_longitude}]`);
     console.log('---');
-  }
+       }}
+  
 }
 
 // Handle QUIT command

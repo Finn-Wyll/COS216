@@ -236,8 +236,8 @@ else if($data["type"] == "CreateOrder"){
     $state = "Storage";
      $delivery_date = null;
 
-    $stmt = $db->prepare("INSERT INTO Orders ( customer_id,order_id, tracking_num, destination_latitude, destination_longitude, state, delivery_date) VALUES ( ?,?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("iisddss",  $customer_id,$order_id, $tracking_num, $destination_latitude, $destination_longitude, $state,$delivery_date);
+    $stmt = $db->prepare("INSERT INTO Orders ( customer_id, tracking_num, destination_latitude, destination_longitude, state, delivery_date) VALUES ( ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isddss",  $customer_id, $tracking_num, $destination_latitude, $destination_longitude, $state,$delivery_date);
 
      if ($stmt->execute()) {
             $order_id = $stmt->insert_id;
@@ -637,6 +637,25 @@ else if ($data["type"] == "GetAllDrones") {
         "status" => "success",
         "timestamp" => time(),
         "data" => $drones
+    ]);
+}
+else if ($data["type"] == "GetProducts") {
+    $order_id = $data['order_id'];
+
+    //get user type
+    $stmt = $db->prepare("SELECT * FROM Orders_Products JOIN Products ON Products.id = Orders_Products.product_id WHERE order_id = ?");
+    $stmt->bind_param("i", $order_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $products = array();
+    while ($row = $result->fetch_assoc()) {
+        $products[] = $row["title"];
+    }
+    http_response_code(200);
+    echo json_encode([
+        "status" => "success",
+        "timestamp" => time(),
+        "data" => $products
     ]);
 }
 
