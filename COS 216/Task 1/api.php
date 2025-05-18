@@ -488,7 +488,7 @@ else if ($data["type"] == "UpdateDrone") {
  * "tracking_num": "CS-23456789",
  * "destination_latitude": -26.234567,
  * "destination_longitude": 28.234567,
- * "state": "OutForDelivery",
+ * "state": "Out_For_Delivery",
  * "delivery_date": null
  * }
  * ]
@@ -551,7 +551,7 @@ else if ($data["type"] == "GetAllOrders") {
  * "tracking_num": "CS-23456789",
  * "destination_latitude": -26.234567,
  * "destination_longitude": 28.234567,
- * "state": "OutForDelivery",
+ * "state": "Out_For_Delivery",
  * "delivery_date": null
  * }
  * ]
