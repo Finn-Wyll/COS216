@@ -1,0 +1,27 @@
+<!-- src/app/components/delivery-animation/delivery-animation.component.html -->
+
+<div *ngIf="visible" class="delivery-animation-container">
+  <div class="animation-overlay" [class.fade-out]="fadeOut"></div>
+  <div class="animation-content" [class.zoom-out]="fadeOut">
+    <div class="package-container">
+      <div class="package" [class.package-delivered]="stage >= 2">
+        <div class="package-top"></div>
+        <div class="package-body"></div>
+      </div>
+      <div *ngIf="stage >= 2" class="checkmark">
+        <svg viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+    </div>
+    <div class="message" [class.show-message]="stage >= 1">
+      <h2>Delivery Complete!</h2>
+      <p *ngIf="stage >= 3">Order has been successfully delivered!</p>
+      <p *ngIf="stage >= 3 && deliveryDate" class="timestamp">{{ deliveryDate | date:'medium' }}</p>
+    </div>
+    <div *ngIf="stage >= 3" class="confetti-container">
+      <div *ngFor="let i of [0,1,2,3,4,5,6,7,8,9]" class="confetti" [style.--delay]="i * 0.1 + 's'"></div>
+    </div>
+  </div>
+</div>

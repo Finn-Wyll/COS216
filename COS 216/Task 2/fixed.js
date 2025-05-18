@@ -308,7 +308,7 @@ async function handleSelectOrders(ws, data) {
       is_available: 0,
       latitude: drone.latest_latitude,
       longitude: drone.latest_longitude,
-      altitude: drone.altitude,
+      altitude: 20,
       battery_level: drone.battery_level
     });
     
@@ -342,7 +342,7 @@ async function handleSelectOrders(ws, data) {
       orders: data.orderIds,
       latitude: parseFloat(drone.latest_latitude),
       longitude: parseFloat(drone.latest_longitude),
-      altitude: parseFloat(drone.altitude),
+      altitude: 20,
       batteryLevel: parseFloat(drone.battery_level)
     });
     
@@ -546,13 +546,13 @@ async function handleDroneMovement(ws, data) {
     // Broadcast new drone position to all clients
     broadcastDronePosition(droneId);
     
-    sendMessage(ws, {
-      type: 'DRONE_MOVED',
-      latitude: newLatitude,
-      longitude: newLongitude,
-      altitude: drone.altitude,
-      batteryLevel: drone.batteryLevel
-    });
+    // sendMessage(ws, {
+    //   type: 'DRONE_MOVED',
+    //   latitude: newLatitude,
+    //   longitude: newLongitude,
+    //   altitude: drone.altitude,
+    //   batteryLevel: drone.batteryLevel
+    // });
     
     // Check if drone is at HQ
     const atHQ = calculateDistance(
@@ -663,7 +663,8 @@ async function handleMarkDelivered(ws, data) {
       order_id: data.orderId,
       latitude: destinationLatitude,
       longitude: destinationLongitude,
-      state: 'Delivered'
+      state: 'Delivered',
+      delivery_date: new Date()
     });
     
     // Update drone orders list
@@ -816,47 +817,61 @@ async function handleCourierDisconnect(clientInfo) {
     if (drone) {
       console.log(`Courier ${clientInfo.username} disconnected while operating drone ${droneId}`);
       
-      // Notify all customers with orders being delivered by this drone
-      for (const orderId of drone.orders) {
-        // Get order details to find customer
-        const ordersResponse = await apiClient.post('', {
-          type: 'GetAllOrders',
-          customer_id: clientInfo.id
-        });
+      // Get all active deliveries first
+      const deliveriesResponse = await apiClient.post('', {
+        type: 'GetAllDeliveries'
+      });
+      
+      if (deliveriesResponse.data.status === 'success' && deliveriesResponse.data.data) {
+        const activeDeliveries = deliveriesResponse.data.data;
         
-        if (ordersResponse.data.status === 'success') {
-          const orders = ordersResponse.data.data;
-          const order = orders.find(o => o.order_id === orderId);
+        // Process each order assigned to this drone
+        for (const orderId of drone.orders) {
+          console.log(`Processing disconnected drone order: ${orderId}`);
+          
+          // Find the order details from active deliveries
+          const order = activeDeliveries.find(o => o.order_id === orderId);
           
           if (order) {
-            // Find customer
+            console.log(`Found order details for order #${orderId}, customer_id: ${order.customer_id}`);
+            
+            // Find the customer to notify
             for (const [socket, client] of clients.entries()) {
               if (client.id === order.customer_id) {
+                console.log(`Notifying customer ${client.username} about postponed delivery`);
+                
                 sendMessage(socket, {
                   type: 'DELIVERY_POSTPONED',
                   orderId: orderId,
-                  message: 'Your delivery has been postponed due to courier connection issues'
+                  message: 'Your delivery has been postponed due to courier disconnection. The drone has crashed.'
                 });
               }
             }
             
             // Reset order to Storage state
-            await apiClient.post('', {
+            const updateResult = await apiClient.post('', {
               type: 'UpdateOrder',
               order_id: orderId,
               latitude: order.destination_latitude,
               longitude: order.destination_longitude,
-              state: 'Storage'
+              state: 'Storage',
+              requested: 1  // Keep it as requested so it appears in the available orders list
             });
+            
+            console.log(`Reset order #${orderId} to Storage state: ${updateResult.data.status}`);
+          } else {
+            console.warn(`Could not find active delivery for order #${orderId}`);
           }
+          
+          // Remove from delivering orders
+          deliveringOrders.delete(orderId);
         }
-        
-        // Remove from delivering orders
-        deliveringOrders.delete(orderId);
+      } else {
+        console.error('Failed to get active deliveries:', deliveriesResponse.data);
       }
       
       // Update drone to crashed state
-      await apiClient.post('', {
+      const droneUpdateResult = await apiClient.post('', {
         type: 'UpdateDrone',
         drone_id: droneId,
         current_operator_id: null,
@@ -866,6 +881,8 @@ async function handleCourierDisconnect(clientInfo) {
         altitude: 0, // Crashed
         battery_level: 0 // Crashed
       });
+      
+      console.log(`Updated drone #${droneId} to crashed state: ${droneUpdateResult.data.status}`);
       
       // Remove from active drones
       activeDrones.delete(droneId);

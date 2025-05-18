@@ -10,11 +10,13 @@ import { OrderService } from '../../services/order.service';
 import { Order } from '../../models/order.model';
 import { Drone } from '../../models/drone.model';
 import { MapComponent } from '../map/map.component';
+// Import the new animation component
+import { DeliveryAnimationComponent } from '../delivery-animation/delivery-animation.component';
 
 @Component({
   selector: 'app-courier-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, MapComponent],
+  imports: [CommonModule, RouterModule, FormsModule, MapComponent, DeliveryAnimationComponent],
   templateUrl: './courier-dashboard.component.html',
   styleUrls: ['./courier-dashboard.component.css']
 })
@@ -37,13 +39,18 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
   customerMarkers: Array<{id: number, latitude: number, longitude: number}> = [];
   isOperatingDrone: boolean = false;
   
+  // Animation state
+  showDeliveryAnimation: boolean = false;
+  deliveredOrderId: number | null = null;
+  deliveryDate: string | null = null;
+  
   private destroy$ = new Subject<void>();
 
   constructor(
     private webSocketService: WebSocketService,
     private authService: AuthService,
     private orderService: OrderService,
-    private dustDevilService: DustDevilService // Inject DustDevilService
+    private dustDevilService: DustDevilService
   ) {}
 
   // Handle keyboard controls for drone movement
@@ -149,10 +156,6 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
             }
             break;
           
-          case 'DRONE_MOVED':
-            this.addNotification(`Drone moved to [${message.latitude}, ${message.longitude}], Altitude: ${message.altitude}m, Battery: ${message.batteryLevel}%`);
-            break;
-          
           case 'DUST_DEVIL_WARNING':
             this.addNotification(`⚠️ ${message.message}`);
             break;
@@ -167,9 +170,15 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
             break;
           
           case 'DELIVERY_CONFIRMED':
-            this.addNotification(`Order #${message.orderId} delivered successfully! ${message.remainingOrders.length} orders left.`);
-            // Only remove the marker on successful delivery confirmation
-            this.customerMarkers = this.customerMarkers.filter(marker => marker.id !== message.orderId);
+            // Store the delivered order ID and delivery date, then show the animation
+            this.deliveredOrderId = message.orderId;
+            this.deliveryDate = message.deliveryDate || null;
+            this.showDeliveryAnimation = true;
+            
+            // The notification will be added after the animation completes
+            
+            // Only remove the marker after the animation completes
+            // We'll handle this in the onAnimationComplete method
             break;
           
           case 'RETURN_TO_HQ':
@@ -199,6 +208,35 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
 
     // Get initial data
     this.loadOrders();
+  }
+
+  // Handle the delivery animation completion
+  onAnimationComplete(): void {
+    this.showDeliveryAnimation = false;
+    
+    // Now add the notification about the successful delivery
+    if (this.deliveredOrderId !== null) {
+      const message = this.webSocketService.getLastMessage();
+      if (message && message.type === 'DELIVERY_CONFIRMED') {
+        let notificationText = `Order #${message.orderId} delivered successfully!`;
+        
+        // Add delivery date if available
+        if (message.deliveryDate) {
+          const date = new Date(message.deliveryDate);
+          notificationText += ` at ${date.toLocaleTimeString()}`;
+        }
+        
+        notificationText += ` ${message.remainingOrders.length} orders left.`;
+        
+        this.addNotification(notificationText);
+        
+        // Remove the marker now that the animation is complete
+        this.customerMarkers = this.customerMarkers.filter(marker => marker.id !== message.orderId);
+      }
+      
+      this.deliveredOrderId = null;
+      this.deliveryDate = null;
+    }
   }
 
   loadOrders(): void {
@@ -326,7 +364,8 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
       orderId: orderId
     });
     
-    // Don't remove the marker here anymore - wait for DELIVERY_CONFIRMED
+    // Don't remove the marker or add notification yet
+    // Wait for the animation to complete first
   }
 
   // Helper function to calculate distance between two points
@@ -388,5 +427,4 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
-
 }

@@ -1,5 +1,3 @@
-// src/app/services/websocket.service.ts (Updated)
-
 import { Injectable, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
@@ -17,6 +15,9 @@ export class WebSocketService {
   
   private messageSubject = new Subject<any>();
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
+  
+  // Store the last message for reference
+  private lastMessage: any = null;
   
   public messages$ = this.messageSubject.asObservable().pipe(
     takeUntilDestroyed(this.destroyRef)
@@ -47,6 +48,10 @@ export class WebSocketService {
       try {
         const data = JSON.parse(event.data);
         console.log('Received message:', data);
+        
+        // Store the last message
+        this.lastMessage = data;
+        
         this.messageSubject.next(data);
       } catch (error) {
         console.error('Error parsing message:', error);
@@ -100,5 +105,10 @@ export class WebSocketService {
       this.socket.close();
       this.socket = null;
     }
+  }
+  
+  // Get the last message received from the server
+  getLastMessage(): any {
+    return this.lastMessage;
   }
 }

@@ -1,5 +1,3 @@
-<!-- src/app/components/courier-dashboard/courier-dashboard.component.html -->
-
 <div class="courier-dashboard-container">
   <header class="dashboard-header">
     <h1>Drone Courier System</h1>
@@ -205,4 +203,11 @@
       </section>
     </main>
   </div>
+  
+  <!-- Delivery Animation Component -->
+  <app-delivery-animation 
+    [show]="showDeliveryAnimation" 
+    [deliveryDate]="deliveryDate"
+    (animationComplete)="onAnimationComplete()"
+  ></app-delivery-animation>
 </div>
