@@ -1,4 +1,5 @@
-export interface User {
+export interface User 
+{
   id: number;
   username: string;
   email: string;
@@ -6,7 +7,8 @@ export interface User {
   authenticated: boolean;
 }
 
-export interface LoginResponse {
+export interface LoginResponse 
+{
   status: string;
   timestamp: number;
   id?: number;

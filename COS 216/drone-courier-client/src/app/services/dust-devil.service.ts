@@ -15,7 +15,7 @@ export class DustDevilService {
   private readonly MAX_LNG = 28.24;
   
   // HQ coordinates
-  private readonly HQ_LATITUDE = 25.7472;
+  private readonly HQ_LATITUDE = -25.7472;
   private readonly HQ_LONGITUDE = 28.2511;
   
   // Dust devil properties

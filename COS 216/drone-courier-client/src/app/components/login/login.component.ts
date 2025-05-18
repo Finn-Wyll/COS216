@@ -15,47 +15,54 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent implements OnInit, OnDestroy {
+
+export class LoginComponent implements OnInit, OnDestroy 
+{
   email: string = '';
   password: string = '';
+
   isConnecting: boolean = true;
   errorMessage: string = '';
+
   private destroy$ = new Subject<void>();
 
-  constructor(
+  constructor
+  (
     private webSocketService: WebSocketService,
     private authService: AuthService,
     private router: Router
   ) {}
 
-  ngOnInit(): void {
-    // Connect to WebSocket
+  ngOnInit(): void 
+  {
     this.webSocketService.connect();
 
-    // Monitor connection status
     this.webSocketService.connectionStatus$
       .pipe(takeUntil(this.destroy$))
       .subscribe(isConnected => {
         this.isConnecting = !isConnected;
       });
 
-    // Listen for login responses
     this.webSocketService.messages$
       .pipe(
         takeUntil(this.destroy$),
         filter(message => ['LOGIN_SUCCESS', 'LOGIN_FAILED'].includes(message.type))
       )
       .subscribe(message => {
-        if (message.type === 'LOGIN_SUCCESS') {
+        if (message.type === 'LOGIN_SUCCESS') 
+          {
           this.router.navigate(['/dashboard']);
-        } else if (message.type === 'LOGIN_FAILED') {
+        } 
+        else if (message.type === 'LOGIN_FAILED') 
+        {
           this.errorMessage = message.message || 'Login failed. Please try again.';
         }
       });
   }
 
   onLogin(): void {
-    if (!this.email || !this.password) {
+    if (!this.email || !this.password) 
+    {
       this.errorMessage = 'Please enter both email and password';
       return;
     }
@@ -64,7 +71,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.authService.login(this.email, this.password);
   }
 
-  ngOnDestroy(): void {
+  ngOnDestroy(): void 
+  {
     this.destroy$.next();
     this.destroy$.complete();
   }

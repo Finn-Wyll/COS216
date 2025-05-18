@@ -1,4 +1,5 @@
-export interface Order {
+export interface Order 
+{
   order_id: number;
   customer_id: number;
   tracking_num: string;
@@ -9,7 +10,8 @@ export interface Order {
   requested?: number; 
 }
 
-export interface OrdersResponse {
+export interface OrdersResponse 
+{
   status: string;
   timestamp: number;
   data: Order[];

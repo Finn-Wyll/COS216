@@ -391,6 +391,7 @@ async function handleSelectOrders(ws, data) {
 
 // Corrected handleDroneMovement function with fixed directional movement
 
+// Enhanced handleDroneMovement function with improved dust devil detection
 async function handleDroneMovement(ws, data) {
   const clientInfo = clients.get(ws);
   
@@ -408,87 +409,116 @@ async function handleDroneMovement(ws, data) {
   }
   
   console.log(`Moving drone ${droneId} in direction ${data.direction}`);
+  console.log(`Current drone position: [${drone.latitude}, ${drone.longitude}], altitude: ${drone.altitude}m`);
   
-  // Calculate new position based on direction (corrected)
+  // Calculate new position based on direction
   let newLatitude = drone.latitude;
   let newLongitude = drone.longitude;
   
-  // Fix the direction mappings
-  // UP: Move north (decrease latitude)
-  // DOWN: Move south (increase latitude)
-  // LEFT: Move west (decrease longitude)
-  // RIGHT: Move east (increase longitude)
+  // Fixed direction mappings according to spec
   switch (data.direction) {
     case 'UP':
-      newLatitude += 0.0001; // Up = North (decrease latitude)
+      newLatitude += 0.0001; // Up = Increase longitude
       break;
     case 'DOWN':
-      newLatitude -= 0.0001; // Down = South (increase latitude)
+      newLatitude -= 0.0001; // Down = Decrease longitude
       break;
     case 'LEFT':
-      newLongitude -= 0.0001; // Left = West (decrease longitude)
+      newLongitude -= 0.0001; // Left = Decrease latitude
       break;
     case 'RIGHT':
-      newLongitude += 0.0001; // Right = East (increase longitude)
+      newLongitude += 0.0001; // Right = Increase latitude
       break;
   }
   
-  // Check for dust devils (if provided by client)
+  console.log(`New drone position: [${newLatitude}, ${newLongitude}]`);
+  
+  // ENHANCED DUST DEVIL DETECTION
   let dustDevilEncountered = false;
+  let dustDevilPosition = null;
   
   if (data.dustDevils && Array.isArray(data.dustDevils) && data.dustDevils.length > 0) {
-    console.log('Checking for dust devils:', data.dustDevils);
+    console.log(`Checking for dust devils, total count: ${data.dustDevils.length}`);
+    console.log('Dust devil positions:', JSON.stringify(data.dustDevils));
     
-    const isInDustDevil = data.dustDevils.some(devil => {
-      if (!devil.latitude || !devil.longitude) return false;
+    // Loop through each dust devil and check for collision
+    for (const devil of data.dustDevils) {
+      if (!devil.latitude || !devil.longitude) {
+        console.log('Skipping dust devil with missing coordinates');
+        continue;
+      }
+      
+      // Ensure coordinates are numbers
+      const devilLat = typeof devil.latitude === 'string' ? parseFloat(devil.latitude) : devil.latitude;
+      const devilLng = typeof devil.longitude === 'string' ? parseFloat(devil.longitude) : devil.longitude;
+      
+      if (isNaN(devilLat) || isNaN(devilLng)) {
+        console.log('Skipping dust devil with invalid coordinates');
+        continue;
+      }
       
       const distance = calculateDistance(
         newLatitude, newLongitude,
-        parseFloat(devil.latitude), parseFloat(devil.longitude)
+        devilLat, devilLng
       );
       
-      console.log(`Distance to dust devil at [${devil.latitude}, ${devil.longitude}]: ${distance}km`);
-      return distance <= 0.0001; // Approximate 10 meters in decimal degrees
-    });
-    
-    if (isInDustDevil) {
-      dustDevilEncountered = true;
-      console.log('Dust devil encountered!');
+      console.log(`Distance to dust devil at [${devilLat}, ${devilLng}]: ${distance}km`);
       
-      // Step back to previous position (corrected for new direction mappings)
+      // Convert to meters (multiply by 1000)
+      const distanceInMeters = distance * 1000;
+      
+      // Check if drone is within 20 meters of dust devil (more lenient detection)
+      if (distanceInMeters <= 20) {
+        dustDevilEncountered = true;
+        dustDevilPosition = { latitude: devilLat, longitude: devilLng };
+        console.log(`COLLISION DETECTED with dust devil at [${devilLat}, ${devilLng}], distance: ${distanceInMeters.toFixed(2)}m`);
+        break;
+      }
+    }
+    
+    if (dustDevilEncountered) {
+      console.log('Handling dust devil encounter!');
+      
+      // Step back to previous position based on movement direction
       switch (data.direction) {
         case 'UP':
-          newLatitude -= 0.0001; // Undo the movement
-          newLatitude -= 0.0001; // Take one step back
+          newLatitude -= 0.0002; // Undo movement + step back
           break;
         case 'DOWN':
-          newLatitude += 0.0001; // Undo the movement
-          newLatitude += 0.0001; // Take one step back
+          newLatitude += 0.0002; // Undo movement + step back
           break;
         case 'LEFT':
-          newLongitude += 0.0001; // Undo the movement
-          newLongitude += 0.0001; // Take one step back
+          newLongitude += 0.0002; // Undo movement + step back
           break;
         case 'RIGHT':
-          newLongitude -= 0.0001; // Undo the movement
-          newLongitude -= 0.0001; // Take one step back
+          newLongitude -= 0.0002; // Undo movement + step back
           break;
       }
       
+      console.log(`After dust devil evasion, new position: [${newLatitude}, ${newLongitude}]`);
+      
       // Increase altitude by 5 meters
       drone.altitude += 5;
+      console.log(`Drone altitude increased to ${drone.altitude}m`);
       
       // Check if altitude is above 30 meters (drone will crash)
       if (drone.altitude > 30) {
-        await handleDroneCrash(droneId, 'Altitude exceeded safe limit due to dust devil');
+        console.log(`Drone altitude (${drone.altitude}m) exceeds safe limit of 30m, drone will crash`);
+        await handleDroneCrash(droneId, 'Altitude exceeded safe limit (30m) due to dust devil');
+        sendMessage(ws, {
+          type: 'DRONE_CRASHED',
+          message: 'Drone crashed: Altitude exceeded safe limit (30m) due to dust devil'
+        });
         return;
       }
       
       sendMessage(ws, {
         type: 'DUST_DEVIL_WARNING',
-        message: 'Drone encountered a dust devil! Altitude increased to ' + drone.altitude + 'm'
+        message: `Drone encountered a dust devil! Altitude increased to ${drone.altitude}m`
       });
     }
+  } else {
+    console.log('No dust devils data provided or array is empty');
   }
   
   // Check if drone is within 5km range of HQ
@@ -546,14 +576,6 @@ async function handleDroneMovement(ws, data) {
     // Broadcast new drone position to all clients
     broadcastDronePosition(droneId);
     
-    // sendMessage(ws, {
-    //   type: 'DRONE_MOVED',
-    //   latitude: newLatitude,
-    //   longitude: newLongitude,
-    //   altitude: drone.altitude,
-    //   batteryLevel: drone.batteryLevel
-    // });
-    
     // Check if drone is at HQ
     const atHQ = calculateDistance(
       newLatitude, newLongitude,
@@ -568,6 +590,33 @@ async function handleDroneMovement(ws, data) {
     console.error('Drone movement error:', error.response?.data || error.message);
     sendMessage(ws, { type: 'ERROR', message: 'Failed to update drone position' });
   }
+}
+
+// Enhanced distance calculation function with more precision
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  // Ensure all inputs are numbers
+  lat1 = typeof lat1 === 'string' ? parseFloat(lat1) : lat1;
+  lon1 = typeof lon1 === 'string' ? parseFloat(lon1) : lon1;
+  lat2 = typeof lat2 === 'string' ? parseFloat(lat2) : lat2;
+  lon2 = typeof lon2 === 'string' ? parseFloat(lon2) : lon2;
+  
+  // Check for invalid inputs
+  if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+    console.error('Invalid coordinates for distance calculation:', { lat1, lon1, lat2, lon2 });
+    return Infinity; // Return large value to prevent movement in case of errors
+  }
+  
+  const R = 6371; // Radius of Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distance in kilometers
+  
+  return distance;
 }
 
 async function handleMarkDelivered(ws, data) {

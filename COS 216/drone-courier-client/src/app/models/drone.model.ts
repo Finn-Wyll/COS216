@@ -1,6 +1,5 @@
-// src/app/models/drone.model.ts
-
-export interface Drone {
+export interface Drone 
+{
   id: number;
   current_operator_id: number | null;
   is_available: boolean;
@@ -10,7 +9,8 @@ export interface Drone {
   battery_level: number;
 }
 
-export interface DronesResponse {
+export interface DronesResponse 
+{
   status: string;
   timestamp: number;
   data: Drone[];

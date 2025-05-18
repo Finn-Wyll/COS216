@@ -1,14 +1,11 @@
-<!-- src/app/components/login/login.component.html -->
-
 <div class="login-container">
   <div class="login-card">
-    <h2>Drone Courier System</h2>
+    <h2>The Best Drone Courier</h2>
+    <h2>😎System😎</h2>
     <h3>Login</h3>
-
     <div *ngIf="isConnecting" class="connecting-message">
       Connecting to server...
     </div>
-
     <form (ngSubmit)="onLogin()" *ngIf="!isConnecting">
       <div class="form-group">
         <label for="email">Email</label>
@@ -21,7 +18,6 @@
           placeholder="Enter your email"
         >
       </div>
-      
       <div class="form-group">
         <label for="password">Password</label>
         <input 
@@ -33,11 +29,9 @@
           placeholder="Enter your password"
         >
       </div>
-      
       <div *ngIf="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>
-      
       <button type="submit" class="login-button">Login</button>
     </form>
   </div>
