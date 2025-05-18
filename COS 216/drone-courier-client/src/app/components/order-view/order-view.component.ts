@@ -1,3 +1,5 @@
+// src/app/components/order-view/order-view.component.ts
+
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -100,11 +102,7 @@ export class OrderViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (order.requested === 1) {
-      this.error = 'Delivery has already been requested for this order';
-      return;
-    }
-
+    // Send request to update the requested field to 1 for this order
     this.webSocketService.send({
       type: 'REQUEST_DELIVERY',
       orderId: order.order_id,

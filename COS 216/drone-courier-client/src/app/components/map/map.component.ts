@@ -26,7 +26,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private dustDevilCircles: L.Circle[] = [];
 
   // HQ coordinates
-  private readonly HQ_LATITUDE = 25.7472;
+  private readonly HQ_LATITUDE = -25.7472;
   private readonly HQ_LONGITUDE = 28.2511;
 
   ngAfterViewInit(): void {
@@ -160,7 +160,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
         const marker = this.customerMarkersMap.get(markerData.id);
         if (marker) {
           marker.setLatLng([markerData.latitude, markerData.longitude]);
-          marker.setPopupContent(`Customer #${markerData.id}<br>[${markerData.latitude.toFixed(4)}, ${markerData.longitude.toFixed(4)}]`);
+          marker.setPopupContent(`Customer #${markerData.id}<br>[${markerData.latitude}, ${markerData.longitude}]`);
         }
       } else {
         // Create new marker
@@ -175,7 +175,7 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
           icon: customerIcon
         }).addTo(this.map!);
         
-        marker.bindPopup(`Customer #${markerData.id}<br>[${markerData.latitude.toFixed(4)}, ${markerData.longitude.toFixed(4)}]`);
+        marker.bindPopup(`Customer #${markerData.id}<br>[${markerData.latitude}, ${markerData.longitude}]`);
         this.customerMarkersMap.set(markerData.id, marker);
       }
     });

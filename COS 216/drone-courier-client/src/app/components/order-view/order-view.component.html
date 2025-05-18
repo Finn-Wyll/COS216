@@ -1,3 +1,5 @@
+<!-- src/app/components/order-view/order-view.component.html -->
+
 <div class="dashboard-container">
   <header class="dashboard-header">
     <h1>Drone Courier System</h1>
@@ -60,13 +62,13 @@
                 </td>
                 <td>
                   <button 
-                    *ngIf="order.state === 'Storage' && (!order.requested || order.requested === 0)"
+                    *ngIf="order.state === 'Storage' && !isDeliveryRequested(order)"
                     class="request-delivery-button"
                     (click)="requestDelivery(order)"
                   >
                     Request Delivery
                   </button>
-                  <span *ngIf="order.state === 'Storage' && order.requested === 1">
+                  <span *ngIf="order.state === 'Storage' && isDeliveryRequested(order)" class="already-requested">
                     Already Requested
                   </span>
                   <span *ngIf="order.state === 'OutForDelivery' || order.state === 'Out_for_delivery'">
@@ -115,7 +117,7 @@
         
         <div *ngIf="dronePosition" class="drone-status">
           <h4>Active Drone</h4>
-          <p><strong>Position:</strong> [{{ dronePosition.latitude.toFixed(4) }}, {{ dronePosition.longitude.toFixed(4) }}]</p>
+          <p><strong>Position:</strong> [{{ dronePosition.latitude}}, {{ dronePosition.longitude}}]</p>
           <p><strong>Altitude:</strong> {{ dronePosition.altitude }} meters</p>
         </div>
       </section>

@@ -1,4 +1,4 @@
-<!-- src/app/components/courier-dashboard/courier-dashboard.component.html (Updated) -->
+<!-- src/app/components/courier-dashboard/courier-dashboard.component.html -->
 
 <div class="courier-dashboard-container">
   <header class="dashboard-header">
@@ -30,7 +30,7 @@
             <div class="status-item">
               <span class="status-label">Position:</span>
               <span class="status-value" *ngIf="dronePosition">
-                [{{ dronePosition.latitude.toFixed(4) }}, {{ dronePosition.longitude.toFixed(4) }}]
+                [{{ dronePosition.latitude | number:'1.4-4' }}, {{ dronePosition.longitude | number:'1.4-4' }}]
               </span>
             </div>
             <div class="status-item">
@@ -39,7 +39,7 @@
             </div>
             <div class="status-item">
               <span class="status-label">Battery:</span>
-              <span class="status-value" [class.battery-low]="batteryLevel < 20">{{ batteryLevel.toFixed(1) }}%</span>
+              <span class="status-value" [class.battery-low]="batteryLevel < 20">{{ batteryLevel | number:'1.2-2' }}%</span>
             </div>
           </div>
           
@@ -72,7 +72,7 @@
       <!-- Orders and Drones Section -->
       <section class="operations-section">
         <div class="orders-container" *ngIf="!isOperatingDrone">
-          <h3>Available Orders (Requested)</h3>
+          <h3>Available Orders</h3>
           <button class="refresh-button" (click)="loadOrders()">Refresh</button>
           
           <div *ngIf="orders.length === 0" class="empty-data">
@@ -100,7 +100,7 @@
                   </td>
                   <td>{{ order.order_id }}</td>
                   <td>{{ order.tracking_num }}</td>
-                  <td>[{{ order.destination_latitude.toFixed(4) }}, {{ order.destination_longitude.toFixed(4) }}]</td>
+                  <td>[{{ order.destination_latitude | number:'1.4-4' }}, {{ order.destination_longitude | number:'1.4-4' }}]</td>
                 </tr>
               </tbody>
             </table>
@@ -127,12 +127,12 @@
                 <tbody>
                   <tr *ngFor="let drone of drones">
                     <td>{{ drone.id }}</td>
-                    <td>{{ parseInt(drone.is_available.toString()) === 1 ? 'Available' : 'In Use' }}</td>
-                    <td>{{ drone.battery_level }}%</td>
+                    <td>{{ drone.is_available ? 'Available' : 'In Use' }}</td>
+                    <td>{{ drone.battery_level | number:'1.2-2' }}%</td>
                     <td>
                       <button 
                         class="select-button" 
-                        [disabled]="parseInt(drone.is_available.toString()) !== 1"
+                        [disabled]="!drone.is_available"
                         (click)="selectDrone(drone)"
                       >
                         Select
@@ -174,7 +174,7 @@
               <tbody>
                 <tr *ngFor="let marker of customerMarkers">
                   <td>{{ marker.id }}</td>
-                  <td>[{{ marker.latitude.toFixed(4) }}, {{ marker.longitude.toFixed(4) }}]</td>
+                  <td>[{{ marker.latitude | number:'1.4-4' }}, {{ marker.longitude | number:'1.4-4' }}]</td>
                   <td>
                     <button 
                       class="deliver-button"

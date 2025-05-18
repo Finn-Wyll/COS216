@@ -37,7 +37,7 @@
           ></app-map>
         </div>
         <div *ngIf="dronePosition" class="drone-info">
-          <p><strong>Drone Position:</strong> [{{ dronePosition.latitude.toFixed(4) }}, {{ dronePosition.longitude.toFixed(4) }}]</p>
+          <p><strong>Drone Position:</strong> [{{ dronePosition.latitude}}, {{ dronePosition.longitude}}]</p>
           <p><strong>Altitude:</strong> {{ dronePosition.altitude }} meters</p>
         </div>
         <div *ngIf="!dronePosition" class="no-drone-info">
