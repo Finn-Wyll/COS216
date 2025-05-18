@@ -1062,7 +1062,7 @@ function handleDroneStatusCommand() {
   
   for (const [droneId, drone] of activeDrones.entries()) {
     console.log(`Drone ID: ${droneId}`);
-    console.log(`Battery Level: ${drone.batteryLevel.toFixed(1)}%`);
+    console.log(`Battery Level: ${drone.batteryLevel.toFixed(1)}%`);s
     console.log(`Altitude: ${drone.altitude} meters`);
     console.log(`Current Operator: ${drone.courierEmail} (ID: ${drone.courierId})`);
     console.log(`GPS Coordinates: [${drone.latitude}, ${drone.longitude}]`);
