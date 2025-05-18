@@ -236,8 +236,8 @@ else if($data["type"] == "CreateOrder"){
     $state = "Storage";
      $delivery_date = null;
 
-    $stmt = $db->prepare("INSERT INTO Orders ( customer_id,order_id, tracking_num, destination_latitude, destination_longitude, state, delivery_date) VALUES ( ?,?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("iisddss",  $customer_id,$order_id, $tracking_num, $destination_latitude, $destination_longitude, $state,$delivery_date);
+    $stmt = $db->prepare("INSERT INTO Orders ( customer_id, tracking_num, destination_latitude, destination_longitude, state, delivery_date) VALUES ( ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isddss",  $customer_id, $tracking_num, $destination_latitude, $destination_longitude, $state,$delivery_date);
 
      if ($stmt->execute()) {
             $order_id = $stmt->insert_id;

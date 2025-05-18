@@ -216,7 +216,6 @@ async function handleRequestDelivery(ws, data) {
     const response = await apiClient.post('', {
       type: 'CreateOrder',
       customer_id: clientInfo.id,
-      order_id: data.orderId,
       destination_latitude: data.latitude,
       destination_longitude: data.longitude
     });
@@ -1003,7 +1002,7 @@ async function handleCurrentlyDeliveringCommand() {
         type: 'GetAllDeliveries',
       });
      
-      
+      var ProductsResponse;
       if (ordersResponse.data.status === 'success') {
         const orders = ordersResponse.data.data;
         
@@ -1019,14 +1018,14 @@ async function handleCurrentlyDeliveringCommand() {
           console.log(`Tracking number: ${order.tracking_num}`);
           console.log(`Products:`);
           // get the products
-           var ProductsResponse = await apiClient.post("", {
+            ProductsResponse = await apiClient.post("", {
         type: 'GetProducts',
         order_id: order.order_id
   
       });
        var products = ProductsResponse.data.data;
        for( j=0;j<products.length;j++)
-          console.log(products[i])
+          console.log(products[j])
           console.log('---');
         }
       }
