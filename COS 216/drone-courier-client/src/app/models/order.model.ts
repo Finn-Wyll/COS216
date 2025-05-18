@@ -1,5 +1,3 @@
-// src/app/models/order.model.ts
-
 export interface Order {
   order_id: number;
   customer_id: number;
@@ -8,6 +6,7 @@ export interface Order {
   destination_longitude: number;
   state: string;
   delivery_date: string | null;
+  requested?: number; 
 }
 
 export interface OrdersResponse {

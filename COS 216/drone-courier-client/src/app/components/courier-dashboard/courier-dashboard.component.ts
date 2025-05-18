@@ -88,13 +88,16 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
         switch (message.type) {
           case 'ORDERS_LIST':
             if (message.orders && Array.isArray(message.orders)) {
-              this.orders = message.orders;
+              // Filter to only show requested orders
+              this.orders = message.orders.filter((order: Order) => order.requested === 1 && order.state === 'Storage');
             }
             break;
           
           case 'DRONES_LIST':
             if (message.drones && Array.isArray(message.drones)) {
               this.drones = message.drones;
+              // Add logging to debug
+              console.log('Drones received:', this.drones);
             }
             break;
           
@@ -170,6 +173,10 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
   loadDrones(): void {
     this.webSocketService.send({
       type: 'GET_DRONES'
+    });
+    // Add debugging - check connection status
+    this.webSocketService.connectionStatus$.subscribe(connected => {
+      console.log('WebSocket connection status:', connected ? 'Connected' : 'Disconnected');
     });
   }
 
@@ -250,9 +257,15 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  parseInt(value: any): number {
+    return parseInt(value.toString());
+  }
+
   selectDrone(drone: Drone): void {
-    if (drone.is_available) {
+    const isAvailable = this.parseInt(drone.is_available) === 1;
+    if (isAvailable) {
       this.selectedDrone = drone;
+      this.addNotification(`Selected drone #${drone.id}`);
     } else {
       this.addNotification(`Drone #${drone.id} is not available`);
     }

@@ -212,36 +212,86 @@ async function handleRequestDelivery(ws, data) {
   }
   
   try {
-    // Call the CreateOrder API
-    const response = await apiClient.post('', {
-      type: 'CreateOrder',
-      customer_id: clientInfo.id,
-      destination_latitude: data.latitude,
-      destination_longitude: data.longitude
+    // First check if the order exists and belongs to the customer
+    const ordersResponse = await apiClient.post('', {
+      type: 'GetAllOrders',
+      customer_id: clientInfo.id
     });
     
-    if (response.data.status === 'success') {
-      // Notify all couriers about new order
-      broadcastToCouriers({
-        type: 'NEW_ORDER',
-        orderId: response.data.data.order_id,
-        trackingNumber: response.data.data.tracking_num,
-        customerId: clientInfo.id,
-        customerEmail: clientInfo.username
+    if (ordersResponse.data.status !== 'success') {
+      sendMessage(ws, { type: 'ERROR', message: 'Failed to verify order' });
+      return;
+    }
+    
+    const orders = ordersResponse.data.data;
+    const order = orders.find(o => o.order_id === data.orderId);
+    
+    if (!order) {
+      // If order doesn't exist, create a new one
+      const createResponse = await apiClient.post('', {
+        type: 'CreateOrder',
+        customer_id: clientInfo.id,
+        destination_latitude: data.latitude,
+        destination_longitude: data.longitude,
+        requested: 1  // Set requested flag to 1
       });
       
-      sendMessage(ws, { 
-        type: 'ORDER_CREATED', 
-        orderId: response.data.data.order_id,
-        trackingNumber: response.data.data.tracking_num,
-        message: 'Order created successfully. Waiting for courier.' 
-      });
+      if (createResponse.data.status === 'success') {
+        // Notify all couriers about new order
+        broadcastToCouriers({
+          type: 'NEW_ORDER',
+          orderId: createResponse.data.data.order_id,
+          trackingNumber: createResponse.data.data.tracking_num,
+          customerId: clientInfo.id,
+          customerEmail: clientInfo.username,
+          requested: 1
+        });
+        
+        sendMessage(ws, { 
+          type: 'ORDER_CREATED', 
+          orderId: createResponse.data.data.order_id,
+          trackingNumber: createResponse.data.data.tracking_num,
+          message: 'Order created successfully. Waiting for courier.',
+          requested: 1
+        });
+      } else {
+        sendMessage(ws, { type: 'ERROR', message: 'Failed to create order' });
+      }
     } else {
-      sendMessage(ws, { type: 'ERROR', message: 'Failed to create order' });
+      // Order exists, update it to set requested flag to 1
+      const updateResponse = await apiClient.post('', {
+        type: 'UpdateOrder',
+        order_id: order.order_id,
+        latitude: order.destination_latitude,
+        longitude: order.destination_longitude,
+        state: order.state,
+        requested: 1  // Set requested flag to 1
+      });
+      
+      if (updateResponse.data.status === 'success') {
+        // Notify all couriers about updated order
+        broadcastToCouriers({
+          type: 'ORDER_UPDATE',
+          orderId: order.order_id,
+          trackingNumber: order.tracking_num,
+          customerId: clientInfo.id,
+          customerEmail: clientInfo.username,
+          requested: 1
+        });
+        
+        sendMessage(ws, { 
+          type: 'ORDER_UPDATE', 
+          orderId: order.order_id,
+          message: 'Delivery requested successfully. Waiting for courier.',
+          requested: 1
+        });
+      } else {
+        sendMessage(ws, { type: 'ERROR', message: 'Failed to update order' });
+      }
     }
   } catch (error) {
-    console.error('Create order error:', error.response?.data || error.message);
-    sendMessage(ws, { type: 'ERROR', message: 'Failed to create order' });
+    console.error('Request delivery error:', error.response?.data || error.message);
+    sendMessage(ws, { type: 'ERROR', message: 'Failed to process delivery request' });
   }
 }
 

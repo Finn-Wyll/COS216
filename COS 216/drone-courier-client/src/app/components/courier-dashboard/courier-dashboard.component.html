@@ -1,4 +1,4 @@
-<!-- src/app/components/courier-dashboard/courier-dashboard.component.html -->
+<!-- src/app/components/courier-dashboard/courier-dashboard.component.html (Updated) -->
 
 <div class="courier-dashboard-container">
   <header class="dashboard-header">
@@ -72,7 +72,7 @@
       <!-- Orders and Drones Section -->
       <section class="operations-section">
         <div class="orders-container" *ngIf="!isOperatingDrone">
-          <h3>Available Orders</h3>
+          <h3>Available Orders (Requested)</h3>
           <button class="refresh-button" (click)="loadOrders()">Refresh</button>
           
           <div *ngIf="orders.length === 0" class="empty-data">
@@ -127,12 +127,12 @@
                 <tbody>
                   <tr *ngFor="let drone of drones">
                     <td>{{ drone.id }}</td>
-                    <td>{{ drone.is_available ? 'Available' : 'In Use' }}</td>
+                    <td>{{ parseInt(drone.is_available.toString()) === 1 ? 'Available' : 'In Use' }}</td>
                     <td>{{ drone.battery_level }}%</td>
                     <td>
                       <button 
                         class="select-button" 
-                        [disabled]="!drone.is_available"
+                        [disabled]="parseInt(drone.is_available.toString()) !== 1"
                         (click)="selectDrone(drone)"
                       >
                         Select

@@ -1,5 +1,3 @@
-// src/app/components/order-view/order-view.component.ts
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -76,6 +74,9 @@ export class OrderViewComponent implements OnInit, OnDestroy {
       .subscribe(message => {
         if (message.type === 'ERROR') {
           this.error = message.message;
+        } else if (message.type === 'ORDER_UPDATE') {
+          // Refresh orders after successful update
+          this.orderService.getOrders();
         }
         
         // Handle drone position updates
@@ -99,6 +100,11 @@ export class OrderViewComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (order.requested === 1) {
+      this.error = 'Delivery has already been requested for this order';
+      return;
+    }
+
     this.webSocketService.send({
       type: 'REQUEST_DELIVERY',
       orderId: order.order_id,
@@ -111,6 +117,7 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     switch (status) {
       case 'Storage':
         return 'status-storage';
+      case 'OutForDelivery':
       case 'Out_for_delivery':
         return 'status-out-for-delivery';
       case 'Delivered':
@@ -124,6 +131,7 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     switch (status) {
       case 'Storage':
         return 'In Storage';
+      case 'OutForDelivery':
       case 'Out_for_delivery':
         return 'Out For Delivery';
       case 'Delivered':
@@ -131,6 +139,10 @@ export class OrderViewComponent implements OnInit, OnDestroy {
       default:
         return status;
     }
+  }
+
+  isDeliveryRequested(order: Order): boolean {
+    return order.requested === 1;
   }
 
   logout(): void {

@@ -1,5 +1,3 @@
-<!-- src/app/components/order-view/order-view.component.html -->
-
 <div class="dashboard-container">
   <header class="dashboard-header">
     <h1>Drone Courier System</h1>
@@ -62,13 +60,16 @@
                 </td>
                 <td>
                   <button 
-                    *ngIf="order.state === 'Storage'"
+                    *ngIf="order.state === 'Storage' && (!order.requested || order.requested === 0)"
                     class="request-delivery-button"
                     (click)="requestDelivery(order)"
                   >
                     Request Delivery
                   </button>
-                  <span *ngIf="order.state === 'Out_for_delivery'">
+                  <span *ngIf="order.state === 'Storage' && order.requested === 1">
+                    Already Requested
+                  </span>
+                  <span *ngIf="order.state === 'OutForDelivery' || order.state === 'Out_for_delivery'">
                     In progress
                   </span>
                   <span *ngIf="order.state === 'Delivered'">

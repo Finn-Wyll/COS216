@@ -220,45 +220,44 @@ else if($data["type"] == "Login"){
  */
 else if($data["type"] == "CreateOrder"){
     $destination_latitude = $data["destination_latitude"];
-      $destination_longitude= $data["destination_longitude"];
-      $customer_id=$data["customer_id"];
-      $order_id=$data["order_id"];
+    $destination_longitude = $data["destination_longitude"];
+    $customer_id = $data["customer_id"];
+    $requested = isset($data["requested"]) ? $data["requested"] : 0;
 
-    if (empty($destination_latitude) || empty($destination_longitude)||empty($customer_id)) {
+    if (empty($destination_latitude) || empty($destination_longitude) || empty($customer_id)) {
         http_response_code(400);
-        echo json_encode(["status" => "error","timestamp" => time(), "message" => "Missing  required field"]);
+        echo json_encode(["status" => "error", "timestamp" => time(), "message" => "Missing required field"]);
         exit;
     }
-     // Generate a unique tracking number
+    
+    // Generate a unique tracking number
     $tracking_num = "CS-" . substr(md5(uniqid()), 0, 8);
 
     // Set the initial state
     $state = "Storage";
-     $delivery_date = null;
+    $delivery_date = null;
 
-    $stmt = $db->prepare("INSERT INTO Orders ( customer_id, tracking_num, destination_latitude, destination_longitude, state, delivery_date) VALUES ( ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("isddss",  $customer_id, $tracking_num, $destination_latitude, $destination_longitude, $state,$delivery_date);
+    $stmt = $db->prepare("INSERT INTO Orders (customer_id, tracking_num, destination_latitude, destination_longitude, state, delivery_date, requested) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isddssi", $customer_id, $tracking_num, $destination_latitude, $destination_longitude, $state, $delivery_date, $requested);
 
-     if ($stmt->execute()) {
-            $order_id = $stmt->insert_id;
-            http_response_code(200);
-            echo json_encode([
-                "status" => "success",
-                "timestamp" => time(),
-                "message" => "Order created successfully",
-                "data" => [
-                    "order_id" => $order_id,
-                    "tracking_num" => $tracking_num
-                ]
-            ]);
-        } else {
-            error_log("Insert error: " . $stmt->error);
-            http_response_code(500);
-            echo json_encode(["status" => "error","timestamp" => time(), "message" => "Failed to create order: ".$stmt->error]);
-        }
-
-
-
+    if ($stmt->execute()) {
+        $order_id = $stmt->insert_id;
+        http_response_code(200);
+        echo json_encode([
+            "status" => "success",
+            "timestamp" => time(),
+            "message" => "Order created successfully",
+            "data" => [
+                "order_id" => $order_id,
+                "tracking_num" => $tracking_num,
+                "requested" => $requested
+            ]
+        ]);
+    } else {
+        error_log("Insert error: " . $stmt->error);
+        http_response_code(500);
+        echo json_encode(["status" => "error", "timestamp" => time(), "message" => "Failed to create order: ".$stmt->error]);
+    }
 }
 
 /**
@@ -275,7 +274,7 @@ else if($data["type"] == "CreateOrder"){
  * "order_id": 123,
  * "latitude": -26.234567,
  * "longitude": 28.234567,
- * "state": "OutForDelivery"
+ * "state": "Out_for_delivery"
  * }
  *
  * @apiSuccessExample Response:
@@ -293,35 +292,39 @@ else if($data["type"] == "CreateOrder"){
  * }
  */
 else if($data["type"] == "UpdateOrder"){
-     $order_id = $data["order_id"];
-      $latitude = $data["latitude"];
-       $longitude = $data["longitude"];
-        $state = $data["state"];
+    $order_id = $data["order_id"];
+    $latitude = $data["latitude"];
+    $longitude = $data["longitude"];
+    $state = $data["state"];
+    $requested = isset($data["requested"]) ? $data["requested"] : null;
+
     if (empty($order_id) || empty($latitude) || empty($longitude) || empty($state)) {
         http_response_code(400);
-        echo json_encode(["status" => "error","timestamp" => time(), "message" => "Missing order_id, latitude, longitude, or state"]);
+        echo json_encode(["status" => "error", "timestamp" => time(), "message" => "Missing order_id, latitude, longitude, or state"]);
         exit;
     }
 
-
-    $stmt = $db->prepare("UPDATE Orders SET destination_latitude = ?, destination_longitude = ?, state = ? WHERE order_id = ? ");
-    $stmt->bind_param("ssdi", $latitude, $longitude, $state, $order_id);
+    // If requested is provided, include it in the update
+    if ($requested !== null) {
+        $stmt = $db->prepare("UPDATE Orders SET destination_latitude = ?, destination_longitude = ?, state = ?, requested = ? WHERE order_id = ?");
+        $stmt->bind_param("sssii", $latitude, $longitude, $state, $requested, $order_id);
+    } else {
+        $stmt = $db->prepare("UPDATE Orders SET destination_latitude = ?, destination_longitude = ?, state = ? WHERE order_id = ?");
+        $stmt->bind_param("sssi", $latitude, $longitude, $state, $order_id);
+    }
 
     if ($stmt->execute()) {
         http_response_code(200);
         echo json_encode([
             "status" => "success",
             "timestamp" => time(),
-            "message"=> "Order updated successfully"
+            "message" => "Order updated successfully"
         ]);
     } else {
         error_log("Update error: " . $stmt->error);
         http_response_code(500);
-        echo json_encode(["status" => "error","timestamp" => time(), "message" => "Failed to update order"]);
+        echo json_encode(["status" => "error", "timestamp" => time(), "message" => "Failed to update order"]);
     }
-
-
-
 }
 
 /**
@@ -488,8 +491,9 @@ else if ($data["type"] == "UpdateDrone") {
  * "tracking_num": "CS-23456789",
  * "destination_latitude": -26.234567,
  * "destination_longitude": 28.234567,
- * "state": "OutForDelivery",
+ * "state": "Out_for_delivery",
  * "delivery_date": null
+ * "requested": 0
  * }
  * ]
  * }
@@ -551,7 +555,7 @@ else if ($data["type"] == "GetAllOrders") {
  * "tracking_num": "CS-23456789",
  * "destination_latitude": -26.234567,
  * "destination_longitude": 28.234567,
- * "state": "OutForDelivery",
+ * "state": "Out_for_delivery",
  * "delivery_date": null
  * }
  * ]

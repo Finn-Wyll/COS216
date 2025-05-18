@@ -1,5 +1,3 @@
-// src/app/services/order.service.ts
-
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, filter } from 'rxjs';
 import { Order } from '../models/order.model';
@@ -24,9 +22,19 @@ export class OrderService {
 
     // Listen for order updates
     this.webSocketService.messages$.pipe(
-      filter(message => ['ORDER_UPDATE', 'ORDER_DELIVERED'].includes(message.type))
+      filter(message => ['ORDER_UPDATE', 'ORDER_DELIVERED', 'ORDER_CREATED'].includes(message.type))
     ).subscribe(response => {
-      this.updateOrderStatus(response.orderId, response.status);
+      if (response.type === 'ORDER_CREATED') {
+        // Add new order to the list
+        const orders = this.ordersSubject.value;
+        if (response.orderId && response.trackingNumber) {
+          // Implement logic to add new order if needed
+          this.getOrders(); // Refresh orders
+        }
+      } else {
+        // Update existing order status
+        this.updateOrderStatus(response.orderId, response.status);
+      }
     });
   }
 
@@ -36,12 +44,12 @@ export class OrderService {
     });
   }
 
-  requestDelivery(orderId: number, latitude: number, longitude: number): void {
+  requestDelivery(order: Order): void {
     this.webSocketService.send({
       type: 'REQUEST_DELIVERY',
-      orderId,
-      latitude,
-      longitude
+      orderId: order.order_id,
+      latitude: order.destination_latitude,
+      longitude: order.destination_longitude
     });
   }
 
