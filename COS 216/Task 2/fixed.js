@@ -1064,23 +1064,33 @@ function handleKillCommand(username) {
 }
 
 // Handle DRONE_STATUS command
-function handleDroneStatusCommand() {
-  if (activeDrones.size === 0) {
-    console.log('No active drones.');
-    return;
-  }
+async function handleDroneStatusCommand() {
+
+
+console.log('Active drones:');
+const dronesResponse = await apiClient.post("", {
+        type: 'GetAllDrones'
+      });
+     
+      
+      if (dronesResponse.data.status === 'success') {
+        const dronesArr = dronesResponse.data.data;
+        
+       for( i=0;i<dronesArr.length;i++){
+       var droneData=dronesArr[i];
+
+ 
   
-  console.log('Active drones:');
   
-  for (const [droneId, drone] of activeDrones.entries()) {
-    console.log(`Drone ID: ${droneId}`);
-    console.log(`Battery Level: ${drone.batteryLevel.toFixed(1)}%`);s
-    console.log(`Altitude: ${drone.altitude} meters`);
-    console.log(`Current Operator: ${drone.courierEmail} (ID: ${drone.courierId})`);
-    console.log(`GPS Coordinates: [${drone.latitude}, ${drone.longitude}]`);
-    console.log(`Orders being delivered: ${drone.orders.join(', ') || 'None'}`);
+  
+  
+    console.log(`Drone ID: ${droneData.id}`);
+    console.log(`Battery Level: ${droneData.battery_level.toFixed(1)}%`);
+    console.log(`Altitude: ${droneData.altitude} meters`);
+    console.log(`GPS Coordinates: [${droneData.latest_latitude}, ${droneData.latest_longitude}]`);
     console.log('---');
-  }
+       }}
+  
 }
 
 // Handle QUIT command
