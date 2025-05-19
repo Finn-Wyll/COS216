@@ -1,5 +1,3 @@
-<!-- src/app/components/customer-dashboard/customer-dashboard.component.html -->
-
 <div class="dashboard-container">
   <header class="dashboard-header">
     <h1>Drone Courier System</h1>
@@ -20,14 +18,14 @@
     <main class="dashboard-main">
       <section class="dashboard-summary">
         <h2>Dashboard</h2>
-        <p>Welcome to the Drone Courier System. You can view your orders and request deliveries.</p>
+        <p>Welcome to The Best Drone Courier System. You can view your orders and request deliveries on them.</p>
         <div class="dashboard-actions">
           <a routerLink="/orders" class="action-button">View My Orders</a>
         </div>
       </section>
 
       <section class="map-container">
-        <h3>Live Drone Tracking</h3>
+        <h3>Live Drone Tracking (pretty cool)</h3>
         <div class="map-wrapper">
           <app-map 
             [centerLatitude]="-25.7545" 
@@ -41,12 +39,12 @@
           <p><strong>Altitude:</strong> {{ dronePosition.altitude }} meters</p>
         </div>
         <div *ngIf="!dronePosition" class="no-drone-info">
-          <p>No active drone deliveries at the moment.</p>
+          <p>No active drone doing deliveries at the moment.</p>
         </div>
       </section>
 
       <section class="notifications">
-        <h3>Recent Notifications</h3>
+        <h3>Your Notifications</h3>
         <div *ngIf="notifications.length === 0" class="empty-notifications">
           No notifications yet
         </div>

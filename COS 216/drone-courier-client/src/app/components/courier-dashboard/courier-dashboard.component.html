@@ -2,14 +2,13 @@
   <header class="dashboard-header">
     <h1>Drone Courier System</h1>
     <div class="user-info">
-      <span>Welcome, {{ userName }} ({{ userType }})</span>
+      <span>Welcome, {{ email }} ({{ userType }})</span>
       <button class="logout-button" (click)="logout()">Logout</button>
     </div>
   </header>
 
   <div class="dashboard-content">
     <main class="courier-main">
-      <!-- Live Map Section -->
       <section class="map-section">
         <h2>Drone Operation</h2>
         <div class="map-container">
@@ -23,7 +22,7 @@
         </div>
         
         <div class="drone-controls" *ngIf="isOperatingDrone">
-          <h3>Drone Controls</h3>
+          <h3>Controls</h3>
           <div class="drone-status">
             <div class="status-item">
               <span class="status-label">Position:</span>
@@ -43,14 +42,14 @@
           
           <div class="control-buttons">
             <div class="control-row">
-              <button class="control-button" (click)="moveDrone('UP')">⬆️ Up</button>
+              <button class="control-button" (click)="moveDrone('UP')">⬆️</button>
             </div>
             <div class="control-row">
-              <button class="control-button" (click)="moveDrone('LEFT')">⬅️ Left</button>
-              <button class="control-button" (click)="moveDrone('RIGHT')">Right ➡️</button>
+              <button class="control-button" (click)="moveDrone('LEFT')">⬅️</button>
+              <button class="control-button" (click)="moveDrone('RIGHT')">➡️</button>
             </div>
             <div class="control-row">
-              <button class="control-button" (click)="moveDrone('DOWN')">⬇️ Down</button>
+              <button class="control-button" (click)="moveDrone('DOWN')">⬇️</button>
             </div>
           </div>
           
@@ -67,7 +66,6 @@
         </div>
       </section>
 
-      <!-- Orders and Drones Section -->
       <section class="operations-section">
         <div class="orders-container" *ngIf="!isOperatingDrone">
           <h3>Available Orders</h3>
@@ -204,7 +202,6 @@
     </main>
   </div>
   
-  <!-- Delivery Animation Component -->
   <app-delivery-animation 
     [show]="showDeliveryAnimation" 
     [deliveryDate]="deliveryDate"

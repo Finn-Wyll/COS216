@@ -21,13 +21,16 @@ import { DeliveryAnimationComponent } from '../delivery-animation/delivery-anima
   styleUrls: ['./courier-dashboard.component.css']
 })
 export class CourierDashboardComponent implements OnInit, OnDestroy {
-  userName: string = '';
+  email: string = '';
   userType: string = '';
   notifications: string[] = [];
   orders: Order[] = [];
   drones: Drone[] = [];
   selectedDrone: Drone | null = null;
   selectedOrders: number[] = [];
+  
+  // Track total products in selected orders
+  totalSelectedProducts: number = 0;
   
   // Debug flags
   isDebugMode: boolean = true; // Set to true to enable debugging
@@ -86,7 +89,7 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
         if (user) {
-          this.userName = user.username;
+          this.email = user.email;
           this.userType = user.type;
         }
       });
@@ -166,7 +169,7 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
           
           case 'ORDERS_SELECTED':
             this.isOperatingDrone = true;
-            this.addNotification(`You are now operating drone #${message.droneId} with ${message.orderIds.length} orders`);
+            this.addNotification(`You are now operating drone #${message.droneId} with ${message.orderIds.length} orders containing ${this.totalSelectedProducts} products`);
             break;
           
           case 'DELIVERY_CONFIRMED':
@@ -174,11 +177,6 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
             this.deliveredOrderId = message.orderId;
             this.deliveryDate = message.deliveryDate || null;
             this.showDeliveryAnimation = true;
-            
-            // The notification will be added after the animation completes
-            
-            // Only remove the marker after the animation completes
-            // We'll handle this in the onAnimationComplete method
             break;
           
           case 'RETURN_TO_HQ':
@@ -189,6 +187,7 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
             this.isOperatingDrone = false;
             this.selectedDrone = null;
             this.selectedOrders = [];
+            this.totalSelectedProducts = 0;
             this.addNotification(`${message.message}`);
             break;
           
@@ -196,32 +195,67 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
             this.isOperatingDrone = false;
             this.selectedDrone = null;
             this.selectedOrders = [];
+            this.totalSelectedProducts = 0;
             this.addNotification(`⛔ ${message.message}`);
             break;
             
           case 'ERROR':
             this.addNotification(`Error: ${message.message}`);
-            // Don't remove markers on error messages
+            break;
+            
+          case 'PRODUCTS_COUNT':
+            if (message.orderId && message.count) 
+            {
+              this.updateProductCount(message.orderId, message.count);
+            }
             break;
         }
       });
 
-    // Get initial data
     this.loadOrders();
   }
 
-  // Handle the delivery animation completion
-  onAnimationComplete(): void {
+  getProductCount(orderId: number): void 
+  {
+    this.webSocketService.send({
+      type: 'GET_PRODUCTS',
+      orderId: orderId
+    });
+  }
+
+  updateProductCount(orderId: number, count: number): void 
+  {
+    if (this.isDebugMode) 
+      {
+      console.log(`Order #${orderId} contains ${count} products`);
+    }
+    
+    if (this.selectedOrders.includes(orderId)) 
+      {
+      this.totalSelectedProducts += count;
+      
+      if (this.totalSelectedProducts > 7) 
+      {
+        this.toggleOrderSelection(orderId);
+
+        this.addNotification(`Cannot select order #${orderId} - would exceed 7 product limit (${this.totalSelectedProducts} total)`);
+      }
+    }
+  }
+
+  onAnimationComplete(): void 
+  {
     this.showDeliveryAnimation = false;
     
-    // Now add the notification about the successful delivery
-    if (this.deliveredOrderId !== null) {
+    if (this.deliveredOrderId !== null) 
+      {
       const message = this.webSocketService.getLastMessage();
-      if (message && message.type === 'DELIVERY_CONFIRMED') {
+      if (message && message.type === 'DELIVERY_CONFIRMED') 
+        {
         let notificationText = `Order #${message.orderId} delivered successfully!`;
         
-        // Add delivery date if available
-        if (message.deliveryDate) {
+        if (message.deliveryDate) 
+          {
           const date = new Date(message.deliveryDate);
           notificationText += ` at ${date.toLocaleTimeString()}`;
         }
@@ -230,7 +264,6 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
         
         this.addNotification(notificationText);
         
-        // Remove the marker now that the animation is complete
         this.customerMarkers = this.customerMarkers.filter(marker => marker.id !== message.orderId);
       }
       
@@ -239,8 +272,10 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  loadOrders(): void {
-    if (this.isDebugMode) {
+  loadOrders(): void 
+  {
+    if (this.isDebugMode) 
+    {
       console.log('Loading orders...');
     }
     this.webSocketService.send({
@@ -248,8 +283,10 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadDrones(): void {
-    if (this.isDebugMode) {
+  loadDrones(): void 
+  {
+    if (this.isDebugMode) 
+      {
       console.log('Loading drones...');
     }
     this.webSocketService.send({
@@ -257,49 +294,68 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleOrderSelection(orderId: number): void {
+  toggleOrderSelection(orderId: number): void 
+  {
     const index = this.selectedOrders.indexOf(orderId);
-    if (index === -1) {
-      // Check if we already have 7 orders selected
-      if (this.selectedOrders.length >= 7) {
-        this.addNotification('Maximum 7 orders can be selected for delivery');
-        return;
-      }
+    
+    if (index === -1) 
+      {
+      this.getProductCount(orderId);
+      
       this.selectedOrders.push(orderId);
-    } else {
+    } 
+    else 
+    {
+      const order = this.orders.find(order => order.order_id === orderId);
+      
       this.selectedOrders.splice(index, 1);
+      
+      this.webSocketService.send({
+        type: 'GET_PRODUCTS',
+        orderId: orderId,
+        action: 'remove'
+      });
     }
   }
 
-  startDelivery(): void {
-    if (!this.selectedDrone) {
+  startDelivery(): void 
+  {
+    if (!this.selectedDrone) 
+    {
       this.addNotification('Please select a drone first');
       return;
     }
 
-    if (this.selectedOrders.length === 0) {
+    if (this.selectedOrders.length === 0) 
+      {
       this.addNotification('Please select at least one order for delivery');
       return;
     }
+    
+    if (this.totalSelectedProducts > 7) 
+    {
+      this.addNotification(`Cannot start delivery - drone capacity exceeded (${this.totalSelectedProducts} products, maximum is 7)`);
+      return;
+    }
 
-    // Log the orders being selected for delivery
     console.log('Starting delivery with orders:', this.selectedOrders);
     console.log('Selected drone:', this.selectedDrone);
+    console.log('Total products:', this.totalSelectedProducts);
 
-    // Send the SELECT_ORDERS message
     const message = {
       type: 'SELECT_ORDERS',
       droneId: this.selectedDrone.id,
-      orderIds: this.selectedOrders
+      orderIds: this.selectedOrders,
+      productCount: this.totalSelectedProducts
     };
     
-    if (this.isDebugMode) {
+    if (this.isDebugMode) 
+      {
       console.log('Sending SELECT_ORDERS message:', message);
     }
 
     this.webSocketService.send(message);
     
-    // Update customer markers for selected orders
     this.customerMarkers = this.orders
       .filter(order => this.selectedOrders.includes(order.order_id))
       .map(order => ({
@@ -311,13 +367,14 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
     console.log('Updated customer markers:', this.customerMarkers);
   }
 
-  moveDrone(direction: string): void {
-    if (!this.isOperatingDrone) {
+  moveDrone(direction: string): void 
+  {
+    if (!this.isOperatingDrone) 
+      {
       this.addNotification('You are not currently operating a drone');
       return;
     }
 
-    // Get current dust devils from service
     const currentDustDevils = this.dustDevilService.getCurrentDustDevils();
 
     this.webSocketService.send({
@@ -327,21 +384,23 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  markAsDelivered(orderId: number): void {
-    if (!this.isOperatingDrone) {
+  markAsDelivered(orderId: number): void 
+  {
+    if (!this.isOperatingDrone) 
+      {
       this.addNotification('You are not currently operating a drone');
       return;
     }
 
-    // Find the customer marker for this order
     const orderMarker = this.customerMarkers.find(marker => marker.id === orderId);
-    if (!orderMarker) {
+    if (!orderMarker) 
+      {
       this.addNotification(`Error: Cannot find marker for order #${orderId}`);
       return;
     }
 
-    // Check if drone is close enough to the delivery location
-    if (this.dronePosition) {
+    if (this.dronePosition) 
+      {
       const distance = this.calculateDistance(
         this.dronePosition.latitude, this.dronePosition.longitude,
         orderMarker.latitude, orderMarker.longitude
@@ -349,8 +408,8 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
       
       console.log(`Distance to delivery location: ${distance} km`);
       
-      // Allow delivery if within 20 meters (0.02 km)
-      if (distance > 0.02) {
+      if (distance > 0.02) 
+        {
         this.addNotification('Move closer to the delivery location');
         return;
       }
@@ -358,19 +417,16 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
 
     console.log(`Sending MARK_DELIVERED for order ${orderId}`);
     
-    // Send request to mark as delivered
     this.webSocketService.send({
       type: 'MARK_DELIVERED',
       orderId: orderId
     });
     
-    // Don't remove the marker or add notification yet
-    // Wait for the animation to complete first
   }
 
-  // Helper function to calculate distance between two points
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371; // Radius of Earth in kilometers
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number 
+  {
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -378,52 +434,64 @@ export class CourierDashboardComponent implements OnInit, OnDestroy {
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distance = R * c; // Distance in kilometers
+    const distance = R * c; 
     return distance;
   }
 
-  private addNotification(message: string): void {
+  private addNotification(message: string): void 
+  {
     this.notifications.unshift(message);
-    // Keep only the last 20 notifications
     if (this.notifications.length > 20) {
       this.notifications.pop();
     }
   }
 
-  // Helper method to determine if a drone is available
-  isDroneAvailable(drone: Drone): boolean {
-    // Handle different data types (number, string, boolean)
-    if (typeof drone.is_available === 'boolean') {
+  isDroneAvailable(drone: Drone): boolean 
+  {
+    if (typeof drone.is_available === 'boolean') 
+      {
       return drone.is_available;
-    } else if (typeof drone.is_available === 'string') {
+    } 
+    else if (typeof drone.is_available === 'string') 
+      {
       return drone.is_available === '1' || drone.is_available === 'true';
-    } else {
+    } 
+    else 
+    {
       return drone.is_available === 1;
     }
   }
 
-  selectDrone(drone: Drone): void {
-    if (this.isDroneAvailable(drone)) {
+  selectDrone(drone: Drone): void 
+  {
+    if (this.isDroneAvailable(drone)) 
+      {
       this.selectedDrone = drone;
+
       this.addNotification(`Selected drone #${drone.id}`);
-    } else {
+    } 
+    else 
+    {
       this.addNotification(`Drone #${drone.id} is not available`);
     }
   }
 
-  logout(): void {
+  logout(): void 
+  {
     this.authService.logout();
     this.webSocketService.disconnect();
   }
 
-  // For debugging - force refresh data
-  forceRefresh(): void {
+  forceRefresh(): void 
+  {
     this.loadOrders();
     this.loadDrones();
+    
     this.addNotification('Force refreshed data');
   }
 
-  ngOnDestroy(): void {
+  ngOnDestroy(): void 
+  {
     this.destroy$.next();
     this.destroy$.complete();
   }

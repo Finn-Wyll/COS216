@@ -62,7 +62,8 @@ export class OrderService
   {
     const currentOrders = this.ordersSubject.value;
 
-    const updatedOrders = currentOrders.map(order => {
+    const updatedOrders = currentOrders.map(order => 
+    {
       if (order.order_id === orderId) 
       {
         return { ...order, state: status };

@@ -12,7 +12,7 @@ import { DustDevilService } from './services/dust-devil.service';
 })
 export class AppComponent implements OnInit 
 {
-  title = 'Drone Delivery System';
+  title = 'The Best Drone Delivery System';
 
   constructor(
     private webSocketService: WebSocketService,

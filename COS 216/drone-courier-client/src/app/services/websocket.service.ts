@@ -6,18 +6,17 @@ import { environment } from '../../environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-export class WebSocketService {
+export class WebSocketService 
+{
   private socket: WebSocket | null = null;
   private destroyRef = inject(DestroyRef);
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout: any = null;
-  
   private messageSubject = new Subject<any>();
   private connectionStatusSubject = new BehaviorSubject<boolean>(false);
-  
-  // Store the last message for reference
   private lastMessage: any = null;
+  private orderProductCounts = new Map<number, number>();
   
   public messages$ = this.messageSubject.asObservable().pipe(
     takeUntilDestroyed(this.destroyRef)
@@ -27,10 +26,15 @@ export class WebSocketService {
     takeUntilDestroyed(this.destroyRef)
   );
 
-  constructor() { }
+  constructor() 
+  { 
 
-  connect(): void {
-    if (this.socket?.readyState === WebSocket.OPEN) {
+  }
+
+  connect(): void 
+  {
+    if (this.socket?.readyState === WebSocket.OPEN) 
+    {
       console.log('WebSocket already connected');
       return;
     }
@@ -41,7 +45,7 @@ export class WebSocketService {
     this.socket.onopen = () => {
       console.log('WebSocket connection established');
       this.connectionStatusSubject.next(true);
-      this.reconnectAttempts = 0; // Reset reconnect attempts on successful connection
+      this.reconnectAttempts = 0; 
     };
 
     this.socket.onmessage = (event) => {
@@ -49,11 +53,22 @@ export class WebSocketService {
         const data = JSON.parse(event.data);
         console.log('Received message:', data);
         
-        // Store the last message
         this.lastMessage = data;
         
+        if (data.type === 'PRODUCTS_COUNT') 
+          {
+          if (data.action === 'add') 
+            {
+            this.orderProductCounts.set(data.orderId, data.count);
+          } else if (data.action === 'remove') 
+            {
+            this.orderProductCounts.delete(data.orderId);
+          }
+        }
+        
         this.messageSubject.next(data);
-      } catch (error) {
+      } catch (error) 
+      {
         console.error('Error parsing message:', error);
       }
     };
@@ -62,8 +77,8 @@ export class WebSocketService {
       console.log(`WebSocket connection closed: ${event.code} ${event.reason}`);
       this.connectionStatusSubject.next(false);
       
-      // Attempt to reconnect with exponential backoff
-      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      if (this.reconnectAttempts < this.maxReconnectAttempts) 
+        {
         const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
         console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
         
@@ -71,7 +86,9 @@ export class WebSocketService {
           this.reconnectAttempts++;
           this.connect();
         }, delay);
-      } else {
+      } 
+      else 
+      {
         console.error('Maximum reconnect attempts reached');
       }
     };
@@ -82,33 +99,53 @@ export class WebSocketService {
     };
   }
 
-  send(message: any): void {
-    if (this.socket?.readyState === WebSocket.OPEN) {
+  send(message: any): void 
+  {
+    if (this.socket?.readyState === WebSocket.OPEN) 
+    {
       console.log('Sending message:', message);
       this.socket.send(JSON.stringify(message));
-    } else {
+    } 
+    else 
+    {
       console.error('Cannot send message, WebSocket is not connected');
-      // Try to reconnect and then send the message
       this.connect();
-      // Add to a queue to send once connected (not implemented in this version)
     }
   }
 
-  disconnect(): void {
-    if (this.reconnectTimeout) {
+  disconnect(): void 
+  {
+    if (this.reconnectTimeout) 
+    {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
     
-    if (this.socket) {
+    if (this.socket) 
+    {
       console.log('Disconnecting WebSocket');
       this.socket.close();
       this.socket = null;
     }
   }
   
-  // Get the last message received from the server
-  getLastMessage(): any {
+  getLastMessage(): any 
+  {
     return this.lastMessage;
+  }
+  
+  getProductCount(orderId: number): number 
+  {
+    return this.orderProductCounts.get(orderId) || 0;
+  }
+  
+  getTotalProductCount(orderIds: number[]): number 
+  {
+    let total = 0;
+    for (const orderId of orderIds) 
+    {
+      total += this.getProductCount(orderId);
+    }
+    return total;
   }
 }

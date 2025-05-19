@@ -29,7 +29,6 @@ export class CustomerDashboardComponent implements OnInit, OnDestroy
   (
     private webSocketService: WebSocketService,
     private authService: AuthService,
-    private orderService: OrderService
   ) {}
 
   ngOnInit(): void 

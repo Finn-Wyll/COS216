@@ -1,5 +1,3 @@
-// src/app/components/map/map.component.ts
-
 import { Component, OnInit, Input, AfterViewInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
@@ -11,9 +9,11 @@ import * as L from 'leaflet';
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
-export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
-  @Input() centerLatitude: number = -25.7545; // Default to Hatfield
-  @Input() centerLongitude: number = 28.2314;
+
+export class MapComponent implements AfterViewInit, OnChanges, OnDestroy 
+{
+  @Input() centerLatitude: number = -25.7545; //Hatfield
+  @Input() centerLongitude: number = 28.2314; //Hatfield
   @Input() zoom: number = 14;
   @Input() dronePosition: { latitude: number, longitude: number, altitude: number } | null = null;
   @Input() dustDevils: Array<{ latitude: number, longitude: number }> = [];
@@ -25,18 +25,21 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private customerMarkersMap: Map<number, L.Marker> = new Map();
   private dustDevilCircles: L.Circle[] = [];
 
-  // HQ coordinates
+  // Hatfield HQ
   private readonly HQ_LATITUDE = -25.7472;
   private readonly HQ_LONGITUDE = 28.2511;
 
-  ngAfterViewInit(): void {
+  ngAfterViewInit(): void 
+  {
     this.initMap();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    // Update drone position if it changes
-    if (changes['dronePosition'] && this.map) {
-      if (this.dronePosition) {
+  ngOnChanges(changes: SimpleChanges): void 
+  {
+    if (changes['dronePosition'] && this.map) 
+      {
+      if (this.dronePosition) 
+        {
         this.updateDronePosition(
           this.dronePosition.latitude,
           this.dronePosition.longitude,
@@ -45,32 +48,31 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     }
 
-    // Update dust devils if they change
-    if (changes['dustDevils'] && this.map) {
+    if (changes['dustDevils'] && this.map) 
+    {
       this.updateDustDevils(this.dustDevils);
     }
 
-    // Update customer markers if they change
-    if (changes['customerMarkers'] && this.map) {
+    if (changes['customerMarkers'] && this.map) 
+    {
       this.updateCustomerMarkers(this.customerMarkers);
     }
   }
 
   private initMap(): void {
-    // Create map
+
     this.map = L.map('map').setView([this.centerLatitude, this.centerLongitude], this.zoom);
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
+    {
       maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
+      attribution: 'DaStreetMap'
     }).addTo(this.map);
 
-    // Add HQ marker
     this.addHQMarker();
 
-    // If there's initial data, add it
-    if (this.dronePosition) {
+    if (this.dronePosition) 
+    {
       this.updateDronePosition(
         this.dronePosition.latitude,
         this.dronePosition.longitude,
@@ -78,22 +80,24 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       );
     }
 
-    if (this.dustDevils.length > 0) {
+    if (this.dustDevils.length > 0) 
+    {
       this.updateDustDevils(this.dustDevils);
     }
 
-    if (this.customerMarkers.length > 0) {
+    if (this.customerMarkers.length > 0) 
+    {
       this.updateCustomerMarkers(this.customerMarkers);
     }
   }
 
-  private addHQMarker(): void {
+  private addHQMarker(): void 
+  {
     if (!this.map) return;
 
-    // Create custom icon for HQ
     const hqIcon = L.divIcon({
       className: 'hq-marker',
-      html: '<div class="hq-icon"><span>HQ</span></div>',
+      html: '<div class="hq-icon"><span>🏢</span></div>',
       iconSize: [32, 32],
       iconAnchor: [16, 16]
     });
@@ -113,7 +117,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     }).addTo(this.map);
   }
 
-  private updateDronePosition(latitude: number, longitude: number, altitude: number): void {
+  private updateDronePosition(latitude: number, longitude: number, altitude: number): void 
+  {
     if (!this.map) return;
 
     // Create drone icon if it doesn't exist
@@ -130,16 +135,19 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       }).addTo(this.map);
       
       this.droneMarker.bindPopup(`Drone<br>Altitude: ${altitude}m`);
-    } else {
+    } 
+    else 
+    {
       this.droneMarker.setLatLng([latitude, longitude]);
       this.droneMarker.setPopupContent(`Drone<br>Altitude: ${altitude}m`);
     }
   }
 
-  private updateCustomerMarkers(markers: Array<{ id: number, latitude: number, longitude: number }>): void {
+  private updateCustomerMarkers(markers: Array<{ id: number, latitude: number, longitude: number }>): void 
+  {
     if (!this.map) return;
 
-    // Remove markers that no longer exist
+    // Remove markers don't exist
     const newMarkerIds = new Set(markers.map(m => m.id));
     Array.from(this.customerMarkersMap.keys()).forEach(id => {
       if (!newMarkerIds.has(id)) {
@@ -153,16 +161,20 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
       }
     });
 
-    // Add or update markers
+    // Add / update markers
     markers.forEach(markerData => {
-      if (this.customerMarkersMap.has(markerData.id)) {
+      if (this.customerMarkersMap.has(markerData.id)) 
+        {
         // Update existing marker
         const marker = this.customerMarkersMap.get(markerData.id);
-        if (marker) {
+        if (marker) 
+          {
           marker.setLatLng([markerData.latitude, markerData.longitude]);
           marker.setPopupContent(`Customer #${markerData.id}<br>[${markerData.latitude}, ${markerData.longitude}]`);
         }
-      } else {
+      } 
+      else 
+      {
         // Create new marker
         const customerIcon = L.divIcon({
           className: 'customer-marker',
@@ -181,7 +193,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     });
   }
 
-  private updateDustDevils(dustDevils: Array<{latitude: number, longitude: number}>): void {
+  private updateDustDevils(dustDevils: Array<{latitude: number, longitude: number}>): void 
+  {
     if (!this.map) return;
 
     // Remove existing dust devils
@@ -190,7 +203,8 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     // Add new dust devils
     dustDevils.forEach(devil => {
-      const circle = L.circle([devil.latitude, devil.longitude], {
+      const circle = L.circle([devil.latitude, devil.longitude], 
+      {
         color: 'orange',
         fillColor: '#ff9800',
         fillOpacity: 0.5,
@@ -202,8 +216,10 @@ export class MapComponent implements AfterViewInit, OnChanges, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    if (this.map) {
+  ngOnDestroy(): void 
+  {
+    if (this.map) 
+    {
       this.map.remove();
       this.map = null;
     }

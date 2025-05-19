@@ -1,5 +1,3 @@
-// src/app/components/order-view/order-view.component.ts
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -18,7 +16,9 @@ import { MapComponent } from '../map/map.component';
   templateUrl: './order-view.component.html',
   styleUrls: ['./order-view.component.css']
 })
-export class OrderViewComponent implements OnInit, OnDestroy {
+
+export class OrderViewComponent implements OnInit, OnDestroy 
+{
   orders: Order[] = [];
   loading: boolean = true;
   error: string = '';
@@ -37,25 +37,25 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     private dustDevilService: DustDevilService
   ) {}
 
-  ngOnInit(): void {
-    // Get current user info
+  ngOnInit(): void 
+  {
     this.authService.currentUser$
       .pipe(takeUntil(this.destroy$))
       .subscribe(user => {
-        if (user) {
+        if (user) 
+        {
           this.userName = user.username;
           this.userType = user.type;
         }
       });
 
-    // Subscribe to orders
     this.orderService.orders$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(orders => {
+      .subscribe(orders => 
+      {
         this.orders = orders;
         this.loading = false;
         
-        // Create customer markers for map
         this.customerMarkers = orders.map(order => ({
           id: order.order_id,
           latitude: order.destination_latitude, 
@@ -63,25 +63,24 @@ export class OrderViewComponent implements OnInit, OnDestroy {
         }));
       });
 
-    // Get dust devils
     this.dustDevilService.dustDevils$
       .pipe(takeUntil(this.destroy$))
       .subscribe(dustDevils => {
         this.dustDevils = dustDevils;
       });
 
-    // Listen for WebSocket messages
     this.webSocketService.messages$
       .pipe(takeUntil(this.destroy$))
       .subscribe(message => {
-        if (message.type === 'ERROR') {
+        if (message.type === 'ERROR') 
+          {
           this.error = message.message;
-        } else if (message.type === 'ORDER_UPDATE') {
-          // Refresh orders after successful update
+        } 
+        else if (message.type === 'ORDER_UPDATE') 
+        {
           this.orderService.getOrders();
         }
         
-        // Handle drone position updates
         if (message.type === 'DRONE_POSITION') {
           this.dronePosition = {
             latitude: message.latitude,
@@ -91,18 +90,18 @@ export class OrderViewComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Get orders
     this.loading = true;
     this.orderService.getOrders();
   }
 
-  requestDelivery(order: Order): void {
-    if (order.state !== 'Storage') {
+  requestDelivery(order: Order): void 
+  {
+    if (order.state !== 'Storage') 
+    {
       this.error = 'This order is already out for delivery or delivered';
       return;
     }
 
-    // Send request to update the requested field to 1 for this order
     this.webSocketService.send({
       type: 'REQUEST_DELIVERY',
       orderId: order.order_id,
@@ -111,8 +110,10 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     });
   }
 
-  getOrderStatusClass(status: string): string {
-    switch (status) {
+  getOrderStatusClass(status: string): string 
+  {
+    switch (status) 
+    {
       case 'Storage':
         return 'status-storage';
       case 'OutForDelivery':
@@ -125,8 +126,10 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  getOrderStatusText(status: string): string {
-    switch (status) {
+  getOrderStatusText(status: string): string 
+  {
+    switch (status) 
+    {
       case 'Storage':
         return 'In Storage';
       case 'OutForDelivery':
@@ -139,21 +142,25 @@ export class OrderViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  isDeliveryRequested(order: Order): boolean {
+  isDeliveryRequested(order: Order): boolean 
+  {
     return order.requested === 1;
   }
 
-  logout(): void {
+  logout(): void 
+  {
     this.authService.logout();
     this.webSocketService.disconnect();
   }
 
-  refreshOrders(): void {
+  refreshOrders(): void 
+  {
     this.loading = true;
     this.orderService.getOrders();
   }
 
-  ngOnDestroy(): void {
+  ngOnDestroy(): void 
+  {
     this.destroy$.next();
     this.destroy$.complete();
   }
